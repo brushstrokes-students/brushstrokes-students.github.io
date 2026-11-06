@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Brushstrokes Student</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Kaushan+Script&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#5c0f20">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="BS Student">
+  <link rel="apple-touch-icon" href="icon-180.png">
+  <link rel="icon" href="icon-192.png">
+  <link rel="stylesheet" href="bs.css">
+</head>
+<body>
+<header class="top">
+  <svg class="art" viewBox="0 0 1200 220" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <defs>
+      <linearGradient id="s1" x1="0" x2="1"><stop offset="0" stop-color="#ff7a59"/><stop offset="1" stop-color="#ffd24d"/></linearGradient>
+      <linearGradient id="s2" x1="0" x2="1"><stop offset="0" stop-color="#8e5bd6"/><stop offset="1" stop-color="#3fa4f0"/></linearGradient>
+      <linearGradient id="s3" x1="0" x2="1"><stop offset="0" stop-color="#4fbf6a"/><stop offset="1" stop-color="#22c4d8"/></linearGradient>
+    </defs>
+    <path d="M-40 -10H340C305 62 225 42 172 112 120 172 28 192-40 152Z" fill="url(#s1)" opacity=".85"/>
+    <path d="M1240 -10H870C912 52 998 30 1052 102 1102 162 1182 172 1240 140Z" fill="url(#s2)" opacity=".8"/>
+    <path d="M60 196C200 154 320 218 470 182" stroke="url(#s3)" stroke-width="18" stroke-linecap="round" fill="none" opacity=".8"/>
+    <path d="M730 42C850 12 960 72 1110 32" stroke="url(#s1)" stroke-width="16" stroke-linecap="round" fill="none" opacity=".75"/>
+    <path d="M520 208C660 178 760 224 900 194" stroke="url(#s2)" stroke-width="13" stroke-linecap="round" fill="none" opacity=".6"/>
+    <g opacity=".9"><circle cx="395" cy="40" r="9" fill="#ff7a59"/><circle cx="430" cy="64" r="5" fill="#ffd24d"/><circle cx="640" cy="26" r="7" fill="#4fbf6a"/><circle cx="780" cy="190" r="8" fill="#8e5bd6"/><circle cx="560" cy="60" r="4" fill="#3fa4f0"/><circle cx="960" cy="180" r="6" fill="#ff7a59"/><circle cx="270" cy="30" r="5" fill="#22c4d8"/></g>
+    <g fill="#ffd24d"><path d="M600 190l3 7 7 3-7 3-3 7-3-7-7-3 7-3z"/><path d="M1000 120l3 7 7 3-7 3-3 7-3-7-7-3 7-3z"/><path d="M330 120l2.5 6 6 2.5-6 2.5-2.5 6-2.5-6-6-2.5 6-2.5z"/></g>
+  </svg>
+  <img class="logo" width="120" height="120" src="logo-brushstrokes.png" alt="Brushstrokes logo" onerror="this.onerror=null;this.src='icon-192.png'">
+  <svg class="logo-svg" viewBox="0 0 1000 250" role="img" aria-label="Brushstrokes">
+    <defs><linearGradient id="lg" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="1000" y2="0">
+      <stop offset="0" stop-color="#a3204f"/><stop offset=".35" stop-color="#e8764f"/><stop offset=".65" stop-color="#4fa45c"/><stop offset="1" stop-color="#2a78c9"/></linearGradient></defs>
+    <path class="halo" d="M30 218 Q500 178 970 208" fill="none" stroke-width="22" stroke-linecap="round"/>
+    <text class="halo" x="10" y="178" textLength="980" lengthAdjust="spacingAndGlyphs" font-size="205" stroke-width="16" stroke-linejoin="round" fill="none">Brushstrokes</text>
+    <path d="M30 218 Q500 178 970 208" fill="none" stroke="url(#lg)" stroke-width="9" stroke-linecap="round"/>
+    <text x="10" y="178" textLength="980" lengthAdjust="spacingAndGlyphs" font-size="205"><tspan fill="#d81b60">B</tspan><tspan fill="#e53935">r</tspan><tspan fill="#fb8c00">u</tspan><tspan fill="#f9a825">s</tspan><tspan fill="#7cb342">h</tspan><tspan fill="#43a047">s</tspan><tspan fill="#00acc1">t</tspan><tspan fill="#1e88e5">r</tspan><tspan fill="#3949ab">o</tspan><tspan fill="#8e24aa">k</tspan><tspan fill="#d81b60">e</tspan><tspan fill="#f4511e">s</tspan></text>
+  </svg>
+  <img class="logo rc" width="120" height="120" src="logo-ramanujan.png" alt="Ramanujan College logo" onerror="this.style.visibility='hidden'">
+  <svg class="wave" viewBox="0 0 1200 30" preserveAspectRatio="none" aria-hidden="true"><path d="M0 30 C200 0 400 40 600 18 S1000 0 1200 24 V30Z"/></svg>
+</header>
+
+<main>
+  <section class="easel" id="easel" aria-label="Student card">
+    <div class="clamp"></div>
+    <div class="board">
+      <div class="avatar-wrap"><div class="avatar" id="avatar"></div><span class="leaf" aria-hidden="true">🌿</span></div>
+      <div class="info">
+        <h2><span id="name"></span> <b class="spark" aria-hidden="true">✦</b></h2>
+        <p class="row"><svg viewBox="0 0 24 24"><path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11.5V16c0 1.5 2.7 3 6 3s6-1.5 6-3v-4.5"/></svg><span id="course"></span></p>
+        <p class="row"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7z"/></svg><span id="roll"></span></p>
+        <p class="row"><svg viewBox="0 0 24 24"><path d="M3 21h18M5 21V9l7-5 7 5v12M9 21v-6h6v6M9 11h.01M15 11h.01"/></svg><span id="college"></span></p>
+      </div>
+      <div class="flourish"><span>🎨</span></div>
+    </div>
+    <div class="shelf"></div>
+    <div class="legs"><span></span><span></span></div>
+  </section>
+
+  <div class="stage" id="stage">
+    <nav class="palette" id="palette" aria-label="Main menu">
+    <svg class="shape" viewBox="0 0 400 360" aria-hidden="true">
+      <defs>
+        <radialGradient id="wd" cx=".35" cy=".28" r=".85"><stop offset="0" style="stop-color:var(--wood1)"/><stop offset=".65" style="stop-color:var(--wood2)"/><stop offset="1" style="stop-color:var(--wood3)"/></radialGradient>
+        <radialGradient id="sp" cx=".3" cy=".2" r=".6"><stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+        <pattern id="gr" width="16" height="16" patternUnits="userSpaceOnUse" patternTransform="rotate(-14)"><rect width="16" height="2.5" fill="rgba(110,60,15,.10)"/><rect y="9" width="16" height="1" fill="rgba(255,230,180,.10)"/></pattern>
+      </defs>
+      <path id="pal" d="M70 60 C110 15 200 5 270 22 C330 35 385 70 392 125 C396 150 395 168 385 178 C355 190 330 200 335 215 C340 232 365 232 372 245 C380 290 330 335 250 345 C160 355 70 335 35 270 C5 215 10 150 30 110 C40 90 55 72 70 60Z"/>
+      <use href="#pal" fill="url(#wd)"/><use href="#pal" fill="url(#gr)"/><use href="#pal" fill="url(#sp)"/>
+      <use href="#pal" fill="none" stroke="rgba(255,235,200,.5)" stroke-width="3"/>
+      <ellipse cx="300" cy="252" rx="22" ry="17" style="fill:var(--bg)"/>
+      <ellipse cx="300" cy="254" rx="22" ry="17" fill="none" stroke="rgba(0,0,0,.35)" stroke-width="3"/>
+      <ellipse cx="300" cy="251" rx="20" ry="15" fill="none" stroke="rgba(255,235,200,.4)" stroke-width="1.5" transform="rotate(180 300 251)" stroke-dasharray="40 200"/>
+    </svg>
+      <a class="dab" data-page="home" style="--i:0;--x:72%;--y:24%;--a:#e0476f;--b:#9b1738" href="index.html">
+        <svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8v10h-6v-6H9v6H3z"/></svg>Home</a>
+      <a class="dab" style="--i:1;--x:48%;--y:17%;--a:#ffa270;--b:#d4542c" href="events.html">
+        <svg viewBox="0 0 24 24"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/></svg>Events</a>
+      <a class="dab" style="--i:2;--x:25%;--y:29%;--a:#ffd45c;--b:#d98308" href="announcements.html">
+        <svg viewBox="0 0 24 24"><path d="M3 11v2l12 5V6zM15 8l5-2v12l-5-2M6 13l1 6h3l-1-5"/></svg>Announce</a>
+      <a class="dab" style="--i:3;--x:17%;--y:54%;--a:#6cc07a;--b:#2f8240" href="attendance.html">
+        <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4M9 15l2 2 4-4"/></svg>Attendance</a>
+      <a class="dab" style="--i:4;--x:29%;--y:76%;--a:#62b1f5;--b:#2569b8" href="info.html">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5h.01"/></svg>Info</a>
+      <a class="dab" style="--i:5;--x:53%;--y:80%;--a:#b98af0;--b:#7a3fc9" href="activity.html">
+        <svg viewBox="0 0 24 24"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>Activity</a>
+    </nav>
+
+    <svg class="brush" id="brush" viewBox="0 0 320 44" role="img" aria-label="Paint brush (click to change colour)">
+      <defs>
+        <linearGradient id="hg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b57544"/><stop offset=".5" stop-color="#7a4624"/><stop offset="1" stop-color="#47260f"/></linearGradient>
+        <linearGradient id="fg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f4f4f4"/><stop offset=".5" stop-color="#a9adb3"/><stop offset="1" stop-color="#d9dbdf"/></linearGradient>
+      </defs>
+      <path d="M118 15 L304 19 Q316 22 304 25 L118 29Z" fill="url(#hg)"/>
+      <rect x="66" y="12" width="58" height="20" rx="4" fill="url(#fg)"/>
+      <path d="M84 12v20M96 12v20M108 12v20" stroke="#8a8e95" stroke-width="1.2"/>
+      <path d="M4 22 Q12 10 44 12 L68 13 L68 31 L44 32 Q12 34 4 22Z" fill="#3b2418"/>
+      <path id="tip" d="M4 22 Q8 15 26 13 Q23 22 26 31 Q8 29 4 22Z" fill="#e8764f"/>
+    </svg>
+  </div>
+</main>
+
+<footer>
+  <p class="f1">Brushstroke Society &nbsp;·&nbsp; Ramanujan College &nbsp;·&nbsp; University of Delhi</p>
+  <p>Copyright © <a href="#">RDSC</a> | Ramanujan College 2026</p>
+  <p><a href="#">Privacy Policy</a> &nbsp;|&nbsp; <a href="#">Terms of Use</a></p>
+</footer>
+
+<button id="themeToggle" class="theme" aria-label="Toggle dark mode"><span>🌙</span></button>
+<button id="installBtn" class="install" hidden>📲 Install app</button>
+<div class="toast" id="toast" role="status"></div>
+<script src="bs.js"></script>
+</body>
+</html>
