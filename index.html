@@ -91,81 +91,93 @@
         <svg viewBox="0 0 24 24"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>Activity</a>
     </nav>
 
-    <svg class="brush" id="brush" viewBox="0 0 360 56" role="img" aria-label="Paint brush (click to change colour)">
+    <svg class="brush" id="brush" viewBox="0 0 340 80" role="img" aria-label="Paint brush (click to change colour)">
       <defs>
-        <!-- handle wood gradient -->
         <linearGradient id="hg" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0"   stop-color="#e8b06a"/>
-          <stop offset="0.3" stop-color="#c07830"/>
-          <stop offset="0.7" stop-color="#8a4e18"/>
-          <stop offset="1"   stop-color="#6a3610"/>
+          <stop offset="0"   stop-color="#f0c070"/>
+          <stop offset="0.2" stop-color="#d49040"/>
+          <stop offset="0.5" stop-color="#a86020"/>
+          <stop offset="0.85" stop-color="#7a4010"/>
+          <stop offset="1"   stop-color="#c07030"/>
         </linearGradient>
-        <!-- handle highlight -->
         <linearGradient id="hh" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stop-color="rgba(255,220,160,.55)"/>
-          <stop offset="1" stop-color="rgba(255,220,160,0)"/>
+          <stop offset="0"   stop-color="rgba(255,235,180,.7)"/>
+          <stop offset="0.4" stop-color="rgba(255,220,140,.2)"/>
+          <stop offset="1"   stop-color="rgba(255,200,100,0)"/>
         </linearGradient>
-        <!-- ferrule metal -->
         <linearGradient id="fg" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0"   stop-color="#e8e8e8"/>
-          <stop offset="0.4" stop-color="#b0b4ba"/>
-          <stop offset="0.7" stop-color="#888c94"/>
-          <stop offset="1"   stop-color="#c8ccd2"/>
+          <stop offset="0"   stop-color="#f0f0f0"/>
+          <stop offset="0.3" stop-color="#c0c4ca"/>
+          <stop offset="0.6" stop-color="#808690"/>
+          <stop offset="1"   stop-color="#c0c4ca"/>
         </linearGradient>
-        <!-- bristle gradient -->
-        <linearGradient id="bg2" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0"   stop-color="#2a1508"/>
-          <stop offset="0.3" stop-color="#5c3018"/>
-          <stop offset="0.6" stop-color="#8a5a2a"/>
-          <stop offset="1"   stop-color="#c09060"/>
+        <linearGradient id="bristleG" x1="1" y1="0" x2="0" y2="0">
+          <stop offset="0"   stop-color="#c09060"/>
+          <stop offset="0.3" stop-color="#8a5a2a"/>
+          <stop offset="0.7" stop-color="#4a2810"/>
+          <stop offset="1"   stop-color="#1e0e04"/>
         </linearGradient>
-        <!-- tip paint -->
-        <linearGradient id="tg" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0" stop-color="#c03050"/>
-          <stop offset="1" stop-color="#ff7a4a"/>
+        <linearGradient id="tg" x1="1" y1="0" x2="0" y2="0">
+          <stop offset="0"   stop-color="#d03858"/>
+          <stop offset="0.5" stop-color="#f06030"/>
+          <stop offset="1"   stop-color="#ff9050"/>
         </linearGradient>
-        <filter id="bshadow" x="-10%" y="-30%" width="120%" height="160%">
-          <feDropShadow dx="1" dy="3" stdDeviation="2" flood-color="rgba(60,20,0,.45)"/>
+        <filter id="bshadow">
+          <feDropShadow dx="2" dy="4" stdDeviation="3" flood-color="rgba(50,15,0,.5)"/>
+        </filter>
+        <filter id="bristleSoft">
+          <feGaussianBlur stdDeviation="0.4"/>
         </filter>
       </defs>
 
-      <!-- full brush group with shadow -->
       <g filter="url(#bshadow)">
-        <!-- HANDLE — tapered wooden rod -->
-        <path d="M140 22 L348 20 Q356 22 356 28 Q356 34 348 36 L140 34 Z" fill="url(#hg)" rx="3"/>
-        <!-- handle highlight streak -->
-        <path d="M145 23 L346 21 Q352 22 354 25 L144 26 Z" fill="url(#hh)"/>
-        <!-- wood grain lines on handle -->
-        <path d="M180 22 L180 34" stroke="rgba(100,55,15,.18)" stroke-width="1"/>
-        <path d="M220 22 L220 34" stroke="rgba(100,55,15,.18)" stroke-width="1"/>
-        <path d="M260 22 L260 34" stroke="rgba(100,55,15,.18)" stroke-width="1"/>
-        <path d="M300 22 L300 34" stroke="rgba(100,55,15,.18)" stroke-width="1"/>
-        <!-- handle end cap -->
-        <ellipse cx="354" cy="28" rx="5" ry="8" fill="#5a3010"/>
+        <!-- === HANDLE === thick wooden rod, tapered slightly toward bristle end -->
+        <path d="M136 18 L326 16 Q338 20 338 40 Q338 60 326 64 L136 62 Z" fill="url(#hg)"/>
+        <!-- top highlight (cylindrical light) -->
+        <path d="M140 19 L322 17 Q332 21 333 28 L140 27 Z" fill="url(#hh)"/>
+        <!-- bottom shadow line -->
+        <path d="M140 61 L322 63 Q332 59 334 54 L140 55 Z" fill="rgba(0,0,0,.18)"/>
+        <!-- wood grain -->
+        <path d="M170 18 L168 62" stroke="rgba(90,45,10,.13)" stroke-width="1.5" fill="none"/>
+        <path d="M210 17 L208 63" stroke="rgba(90,45,10,.13)" stroke-width="1.5" fill="none"/>
+        <path d="M250 17 L248 63" stroke="rgba(90,45,10,.13)" stroke-width="1.5" fill="none"/>
+        <path d="M290 16 L288 64" stroke="rgba(90,45,10,.13)" stroke-width="1.5" fill="none"/>
+        <!-- end cap -->
+        <ellipse cx="334" cy="40" rx="6" ry="24" fill="#6a3810"/>
+        <ellipse cx="334" cy="40" rx="3" ry="20" fill="rgba(255,200,120,.2)"/>
 
-        <!-- FERRULE — metal band where bristles meet handle -->
-        <rect x="118" y="19" width="28" height="18" rx="3" fill="url(#fg)"/>
-        <!-- ferrule ring lines -->
-        <line x1="124" y1="19" x2="124" y2="37" stroke="rgba(80,85,95,.4)" stroke-width="1.2"/>
-        <line x1="130" y1="19" x2="130" y2="37" stroke="rgba(80,85,95,.4)" stroke-width="1.2"/>
-        <line x1="136" y1="19" x2="136" y2="37" stroke="rgba(80,85,95,.4)" stroke-width="1.2"/>
-        <!-- ferrule highlight -->
-        <rect x="118" y="19" width="28" height="6" rx="3" fill="rgba(255,255,255,.35)"/>
+        <!-- === FERRULE === wide metal collar -->
+        <rect x="112" y="15" width="30" height="50" rx="4" fill="url(#fg)"/>
+        <!-- metal ring bands -->
+        <line x1="118" y1="15" x2="118" y2="65" stroke="rgba(60,65,75,.35)" stroke-width="1.5"/>
+        <line x1="124" y1="15" x2="124" y2="65" stroke="rgba(60,65,75,.35)" stroke-width="1.5"/>
+        <line x1="130" y1="15" x2="130" y2="65" stroke="rgba(60,65,75,.35)" stroke-width="1.5"/>
+        <line x1="136" y1="15" x2="136" y2="65" stroke="rgba(60,65,75,.35)" stroke-width="1.5"/>
+        <!-- ferrule top shine -->
+        <rect x="112" y="15" width="30" height="10" rx="4" fill="rgba(255,255,255,.45)"/>
+        <!-- ferrule bottom shadow -->
+        <rect x="112" y="56" width="30" height="9" rx="4" fill="rgba(0,0,0,.18)"/>
 
-        <!-- BRISTLES — natural taper from ferrule to tip -->
-        <path d="M118 20 Q80 18 20 24 Q12 24 4 28 Q12 32 20 32 Q80 38 118 36 Z" fill="url(#bg2)"/>
-        <!-- bristle texture lines -->
-        <path d="M108 21 Q70 20 20 26" stroke="rgba(255,200,140,.18)" stroke-width="1" fill="none"/>
-        <path d="M108 23 Q70 22 18 28" stroke="rgba(255,200,140,.12)" stroke-width="1" fill="none"/>
-        <path d="M108 33 Q70 34 20 30" stroke="rgba(0,0,0,.18)" stroke-width="1" fill="none"/>
-        <path d="M108 35 Q70 36 20 31" stroke="rgba(0,0,0,.12)" stroke-width="1" fill="none"/>
+        <!-- === BRISTLES === thick, natural fan taper -->
+        <!-- main bristle body -->
+        <path d="M112 17 Q72 14 28 30 Q10 36 4 40 Q10 44 28 50 Q72 66 112 63 Z" fill="url(#bristleG)"/>
+        <!-- bristle strand texture - upper bundle -->
+        <path d="M105 19 Q68 17 28 31 Q16 35 8 39" stroke="rgba(220,180,120,.22)" stroke-width="1.2" fill="none"/>
+        <path d="M105 23 Q66 21 24 34 Q14 37 6 40" stroke="rgba(220,180,120,.16)" stroke-width="1" fill="none"/>
+        <path d="M105 27 Q65 25 22 37" stroke="rgba(220,180,120,.10)" stroke-width="1" fill="none"/>
+        <!-- bristle strand texture - lower bundle -->
+        <path d="M105 61 Q68 63 28 50 Q16 46 8 42" stroke="rgba(0,0,0,.2)" stroke-width="1.2" fill="none"/>
+        <path d="M105 57 Q66 59 24 47 Q14 44 6 41" stroke="rgba(0,0,0,.14)" stroke-width="1" fill="none"/>
+        <!-- center highlight on bristles -->
+        <path d="M108 36 Q75 34 30 39 Q18 40 8 40" stroke="rgba(255,220,160,.18)" stroke-width="2" fill="none"/>
 
-        <!-- PAINT TIP — wet paint glob -->
-        <path id="tip" d="M4 28 Q2 24 6 21 Q14 19 20 24 Q12 24 20 32 Q14 33 6 35 Q2 32 4 28Z" fill="url(#tg)"/>
-        <!-- paint tip gloss -->
-        <path d="M7 23 Q12 21 17 23 Q12 22 7 24Z" fill="rgba(255,255,255,.4)"/>
+        <!-- === PAINT TIP === wet loaded brush tip -->
+        <path id="tip" d="M4 40 Q2 32 8 25 Q18 20 28 30 Q18 33 20 40 Q18 47 28 50 Q18 60 8 55 Q2 48 4 40Z" fill="url(#tg)"/>
+        <!-- tip gloss -->
+        <path d="M9 27 Q18 23 24 28 Q16 25 9 29Z" fill="rgba(255,255,255,.45)"/>
         <!-- paint drip -->
-        <path d="M10 35 Q9 40 11 43 Q13 40 12 35Z" fill="#e06040" opacity=".7"/>
+        <path d="M12 53 Q10 60 13 66 Q16 60 14 53Z" fill="#d04828" opacity=".75"/>
+        <circle cx="11" cy="67" r="2.5" fill="#c03820" opacity=".6"/>
       </g>
     </svg>
   </div>
