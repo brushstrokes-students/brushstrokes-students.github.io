@@ -19,14 +19,29 @@ $("#avatar").innerHTML = student.photo
 const toast = $("#toast"); let tt;
 function say(msg){ toast.textContent = msg; toast.classList.add("show"); clearTimeout(tt); tt = setTimeout(() => toast.classList.remove("show"), 2200); }
 
-// ---------- Dark mode ----------
+// ---------- Dark mode (no flicker on mobile) ----------
 const root = document.documentElement, tbtn = $("#themeToggle");
-function setTheme(t){ root.dataset.theme = t; tbtn.firstElementChild.textContent = t === "dark" ? "☀️" : "🌙"; }
+function setTheme(t, animate){
+  root.dataset.theme = t;
+  tbtn.firstElementChild.textContent = t === "dark" ? "☀️" : "🌙";
+  if (animate) {
+    // force reflow so transition triggers correctly on mobile
+    root.offsetHeight; // eslint-disable-line no-unused-expressions
+  }
+}
 let saved = "light";
 try { saved = localStorage.getItem("theme") || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"); } catch(e){}
-setTheme(saved);
+// Apply saved theme immediately (no transition — prevents flash)
+setTheme(saved, false);
+// Enable transitions only after first paint (prevents mobile flicker)
+requestAnimationFrame(() => {
+  requestAnimationFrame(() => {
+    document.body.classList.add("theme-ready");
+  });
+});
 tbtn.addEventListener("click", () => {
-  const n = root.dataset.theme === "dark" ? "light" : "dark"; setTheme(n);
+  const n = root.dataset.theme === "dark" ? "light" : "dark";
+  setTheme(n, true);
   try { localStorage.setItem("theme", n); } catch(e){}
 });
 
