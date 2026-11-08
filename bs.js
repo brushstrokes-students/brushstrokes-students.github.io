@@ -6,7 +6,7 @@
 // ── Firebase (CDN modules) ───────────────────────────────────
 import { initializeApp } from "https://www.gstatic.com/firebasejs/13.2.0/firebase-app.js";
 import {
-  getAuth, setPersistence, browserLocalPersistence, onAuthStateChanged,
+  initializeAuth, inMemoryPersistence, onAuthStateChanged,
   createUserWithEmailAndPassword, signInWithEmailAndPassword, updatePassword, signOut
 } from "https://www.gstatic.com/firebasejs/13.2.0/firebase-auth.js";
 import {
@@ -317,7 +317,8 @@ const firebaseConfig = {
   appId: "1:140790604149:web:18dc0eaf59d9672ce8333c"
 };
 const fbApp = initializeApp(firebaseConfig);
-const auth = getAuth(fbApp);
+// in-memory session: nothing is stored, so every reload / reopen asks for login again
+const auth = initializeAuth(fbApp, { persistence: inMemoryPersistence });
 const db = getFirestore(fbApp);
 
 const A = id => document.getElementById(id);
@@ -438,7 +439,8 @@ A("authScreen").addEventListener("click", e => {
     const input = A(tog.dataset.target);
     const show = input.type === "password";
     input.type = show ? "text" : "password";
-    tog.textContent = show ? "Hide" : "Show";
+    tog.classList.toggle("is-shown", show);
+    tog.setAttribute("aria-label", show ? "Hide password" : "Show password");
     tog.setAttribute("aria-pressed", String(show));
   }
 });
@@ -499,14 +501,14 @@ A("signupForm").addEventListener("submit", async e => {
 
   const fullName = tidy(A("suName").value);
   const course = tidy(A("suCourse").value);
-  const yearEl = document.querySelector('input[name="suYear"]:checked');
+  const year = A("suYear").value;
   const password = A("suPass").value;
   const questionId = A("suQ").value;
   const answer = tidy(A("suA").value);
 
   if (!NAME_RE.test(fullName)) return auMsg(msg, "Enter your full name using letters only.");
   if (course.length < 2) return auMsg(msg, "Enter your course.");
-  if (!yearEl || !YEARS.includes(yearEl.value)) return auMsg(msg, "Choose your year.");
+  if (!YEARS.includes(year)) return auMsg(msg, "Choose your year.");
   if (password.length < 6) return auMsg(msg, "Password must be at least 6 characters.");
   if (!QUESTIONS.some(q => q.id === questionId)) return auMsg(msg, "Choose a security question.");
   if (answer.length < 4) return auMsg(msg, "Your answer needs at least 4 characters.");
@@ -523,7 +525,7 @@ A("signupForm").addEventListener("submit", async e => {
     const batch = writeBatch(db);
     batch.set(doc(db, "users", created.uid), {
       fullName, normName: normalizeName(fullName), nameHash: hash,
-      course, year: yearEl.value, createdAt: serverTimestamp()
+      course, year, createdAt: serverTimestamp()
     });
     batch.set(doc(db, "recovery", hash), {
       uid: created.uid, questionId, ...recovery, createdAt: serverTimestamp()
@@ -696,7 +698,7 @@ A("fgNewForm").addEventListener("submit", async e => {
 
 // ── start ────────────────────────────────────────────────────
 // Whole app stays hidden (auth-pending) until Firebase answers.
-setPersistence(auth, browserLocalPersistence).catch(() => {});
+// First visit on a device -> Create Account; every visit after -> Login.
 auGo(hasAccount() ? "login" : "signup", false);
 
 const auFailSafe = setTimeout(() => {
