@@ -328,7 +328,7 @@ const htmlEl = document.documentElement;
 // NOTE: the admin app must use the SAME normalizeName + nameHash when it
 // publishes attendance_summary/{nameHash}.
 const EMAIL_DOMAIN = "students.brushstrokes.app";
-const YEARS = ["1st", "2nd", "3rd"];
+const YEARS = ["1st", "2nd", "3rd", "4th"];
 const QUESTIONS = [
   { id: "school",  text: "What was the name of your first school?" },
   { id: "city",    text: "In which city were you born?" },
@@ -336,6 +336,32 @@ const QUESTIONS = [
   { id: "friend",  text: "What is the name of your childhood best friend?" },
   { id: "teacher", text: "What is the name of your favourite teacher?" },
   { id: "dish",    text: "What is your favourite food?" }
+];
+const COURSES = [
+  "B.A. (Hons.) Applied Psychology",
+  "B.A. (Hons.) Economics",
+  "B.A. (Hons.) English",
+  "B.A. (Hons.) Hindi",
+  "B.A. (Hons.) Philosophy",
+  "B.A. (Hons.) Political Science",
+  "B.A. Programme (Commerce + Economics)",
+  "B.A. Programme (Commerce + Mathematics)",
+  "B.A. Programme (Economics + Psychology)",
+  "B.A. Programme (Hindi + History)",
+  "B.A. Programme (Hindi + Political Science)",
+  "B.A. Programme (History + Philosophy)",
+  "B.A. Programme (History + Political Science)",
+  "B.A. Programme (Philosophy + Political Science)",
+  "B.A. Programme (Political Science + Psychology)",
+  "B.Com.",
+  "B.Com. (Hons.)",
+  "B.Sc. (Hons.) Computer Science",
+  "B.Sc. (Hons.) Environmental Sciences",
+  "B.Sc. (Hons.) Mathematics",
+  "B.Sc. (Hons.) Statistics",
+  "B.Voc. Banking, Financial Services and Insurance",
+  "B.Voc. Software Development",
+  "Bachelor of Management Studies (BMS)"
 ];
 const PBKDF2_ITERATIONS = 250000;
 const enc = new TextEncoder();
@@ -491,6 +517,89 @@ QUESTIONS.forEach(q => {
   A("suQ").appendChild(o);
 });
 
+// ── course dropdown with search ──────────────────────────────
+// Typing filters the list ("bsc comp" finds B.Sc. (Hons.) Computer Science).
+// Only a course from the list is accepted.
+const courseKey = s => String(s || "").toLowerCase().replace(/[^a-z0-9 ]+/g, "").replace(/\s+/g, " ").trim();
+const courseFind = text => COURSES.find(c => courseKey(c) === courseKey(text));
+const courseInput = A("suCourse"), courseList = A("suCourseList");
+const courseBox = courseInput.closest(".au-combo");
+let courseShown = [], courseActive = -1;
+
+function courseSetActive(i) {
+  courseActive = i;
+  [...courseList.children].forEach((li, n) => li.classList.toggle("is-active", n === i));
+  const li = courseList.children[i];
+  if (li && li.id) {
+    courseInput.setAttribute("aria-activedescendant", li.id);
+    li.scrollIntoView({ block: "nearest" });
+  } else courseInput.removeAttribute("aria-activedescendant");
+}
+function courseOpen() {
+  const picked = courseFind(courseInput.value);
+  const words = picked ? [] : courseKey(courseInput.value).split(" ").filter(Boolean);
+  courseShown = COURSES.filter(c => { const k = courseKey(c); return words.every(w => k.includes(w)); });
+  courseList.textContent = "";
+  if (!courseShown.length) {
+    const li = document.createElement("li");
+    li.className = "au-opt none"; li.textContent = "No matching course";
+    courseList.appendChild(li);
+  } else {
+    courseShown.forEach((c, i) => {
+      const li = document.createElement("li");
+      li.id = `suCourseOpt${i}`; li.className = "au-opt"; li.dataset.i = i;
+      li.setAttribute("role", "option");
+      li.setAttribute("aria-selected", String(c === picked));
+      li.textContent = c;
+      courseList.appendChild(li);
+    });
+  }
+  courseList.hidden = false;
+  courseInput.setAttribute("aria-expanded", "true");
+  courseSetActive(courseShown.length ? Math.max(0, courseShown.indexOf(picked)) : -1);
+}
+function courseClose() {
+  courseList.hidden = true;
+  courseInput.setAttribute("aria-expanded", "false");
+  courseInput.removeAttribute("aria-activedescendant");
+  courseActive = -1;
+}
+function courseChoose(i) {
+  if (!courseShown[i]) return;
+  courseInput.value = courseShown[i];
+  courseClose();
+}
+courseInput.addEventListener("focus", courseOpen);
+courseInput.addEventListener("click", () => { if (courseList.hidden) courseOpen(); });
+courseInput.addEventListener("input", courseOpen);
+courseInput.addEventListener("keydown", e => {
+  if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+    e.preventDefault();
+    if (courseList.hidden) { courseOpen(); return; }
+    if (!courseShown.length) return;
+    const step = e.key === "ArrowDown" ? 1 : -1;
+    courseSetActive((courseActive + step + courseShown.length) % courseShown.length);
+  } else if (e.key === "Enter" && !courseList.hidden && courseActive >= 0) {
+    e.preventDefault();
+    courseChoose(courseActive);
+  } else if (e.key === "Escape" && !courseList.hidden) {
+    e.preventDefault(); e.stopPropagation();
+    courseClose();
+  } else if (e.key === "Tab") {
+    courseClose();
+  }
+});
+courseList.addEventListener("mousedown", e => e.preventDefault());   // keep focus in the input
+courseList.addEventListener("click", e => {
+  const li = e.target.closest(".au-opt[data-i]");
+  if (li) courseChoose(Number(li.dataset.i));
+});
+courseBox.querySelector(".au-caret").addEventListener("mousedown", e => e.preventDefault());
+courseBox.querySelector(".au-caret").addEventListener("click", () => {
+  if (courseList.hidden) { courseInput.focus(); courseOpen(); } else courseClose();
+});
+courseBox.addEventListener("focusout", e => { if (!courseBox.contains(e.relatedTarget)) courseClose(); });
+
 // ── create account ───────────────────────────────────────────
 const NAME_RE = /^\p{L}[\p{L}\p{M} .'-]{1,59}$/u;
 
@@ -500,14 +609,14 @@ A("signupForm").addEventListener("submit", async e => {
   auMsg(msg, "");
 
   const fullName = tidy(A("suName").value);
-  const course = tidy(A("suCourse").value);
+  const course = courseFind(A("suCourse").value);
   const year = A("suYear").value;
   const password = A("suPass").value;
   const questionId = A("suQ").value;
   const answer = tidy(A("suA").value);
 
   if (!NAME_RE.test(fullName)) return auMsg(msg, "Enter your full name using letters only.");
-  if (course.length < 2) return auMsg(msg, "Enter your course.");
+  if (!course) return auMsg(msg, "Choose your course from the list.");
   if (!YEARS.includes(year)) return auMsg(msg, "Choose your year.");
   if (password.length < 6) return auMsg(msg, "Password must be at least 6 characters.");
   if (!QUESTIONS.some(q => q.id === questionId)) return auMsg(msg, "Choose a security question.");
@@ -537,6 +646,7 @@ A("signupForm").addEventListener("submit", async e => {
     try { localStorage.setItem("bsHasAccount", "1"); } catch (_) {}
 
     A("signupForm").reset();
+    courseClose();
     await auGo("login");
     A("lgName").value = fullName;
     A("lgPass").focus();

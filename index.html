@@ -22,19 +22,6 @@
 <!-- ══ LOGIN / CREATE ACCOUNT SCREEN (shown until Firebase confirms a login) ══ -->
 <div id="authScreen">
 
-  <!-- festive background (decorative) — delete this block after the festival if you like -->
-  <div class="au-sky" aria-hidden="true">
-    <span class="au-sun"></span>
-    <span class="au-fl" style="left:48%;top:3%;animation-delay:-1s">🏮</span>
-    <span class="au-fl" style="left:9%;top:64%;animation-delay:-3s">🏮</span>
-    <span class="au-fl" style="left:90%;top:52%;animation-delay:-5s">🏮</span>
-    <span class="au-fl s" style="left:4%;top:24%;animation-delay:-2s">✨</span>
-    <span class="au-fl s" style="left:30%;top:26%;animation-delay:-4s">✨</span>
-    <span class="au-fl s" style="left:78%;top:34%;animation-delay:-6s">✨</span>
-    <span class="au-fl s" style="left:16%;top:86%;animation-delay:-2.5s">✨</span>
-    <span class="au-fl s" style="left:64%;top:92%;animation-delay:-4.5s">✨</span>
-  </div>
-
   <div class="au-wrap">
     <section class="au-card">
 
@@ -63,20 +50,28 @@
           <input id="suName" type="text" autocomplete="name" maxlength="60" required>
         </div>
 
-        <div class="au-row">
-          <div class="au-field">
-            <label for="suCourse">Course</label>
-            <input id="suCourse" type="text" maxlength="80" placeholder="e.g. B.Com (Hons)" required>
+        <div class="au-field">
+          <label for="suCourse">Course</label>
+          <div class="au-combo">
+            <input id="suCourse" type="text" role="combobox" aria-expanded="false" aria-controls="suCourseList"
+                   aria-autocomplete="list" autocomplete="off" spellcheck="false"
+                   placeholder="Search and select your course" required>
+            <button type="button" class="au-caret" tabindex="-1" aria-label="Show all courses">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+            </button>
+            <ul id="suCourseList" class="au-list" role="listbox" aria-label="Courses" hidden></ul>
           </div>
-          <div class="au-field">
-            <label for="suYear">Year</label>
-            <select id="suYear" required>
-              <option value="" disabled selected>Select</option>
-              <option value="1st">1st year</option>
-              <option value="2nd">2nd year</option>
-              <option value="3rd">3rd year</option>
-            </select>
-          </div>
+        </div>
+
+        <div class="au-field">
+          <label for="suYear">Year</label>
+          <select id="suYear" required>
+            <option value="" disabled selected>Select your year</option>
+            <option value="1st">1st year</option>
+            <option value="2nd">2nd year</option>
+            <option value="3rd">3rd year</option>
+            <option value="4th">4th year</option>
+          </select>
         </div>
 
         <div class="au-field">
