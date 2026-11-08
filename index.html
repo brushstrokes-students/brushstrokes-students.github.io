@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en" data-theme="light" class="auth-pending">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -18,6 +18,178 @@
   <link rel="stylesheet" href="bs.css">
 </head>
 <body>
+
+<!-- ══ LOGIN / CREATE ACCOUNT SCREEN (shown until Firebase confirms a login) ══ -->
+<div id="authScreen">
+<div class="au-wrap">
+
+  <h1 class="au-brand">
+    <span class="au-sr">Brushstrokes</span>
+    <svg class="au-wordmark" viewBox="0 0 1000 250" aria-hidden="true">
+      <defs>
+        <linearGradient id="alg" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="1000" y2="0">
+          <stop offset="0"   stop-color="#a3204f"/>
+          <stop offset=".35" stop-color="#e8764f"/>
+          <stop offset=".65" stop-color="#4fa45c"/>
+          <stop offset="1"   stop-color="#2a78c9"/>
+        </linearGradient>
+        <linearGradient id="alg2" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="1000" y2="0">
+          <stop offset="0"   stop-color="#d81b60"/>
+          <stop offset=".15" stop-color="#e53935"/>
+          <stop offset=".3"  stop-color="#fb8c00"/>
+          <stop offset=".42" stop-color="#f9a825"/>
+          <stop offset=".52" stop-color="#43a047"/>
+          <stop offset=".68" stop-color="#1e88e5"/>
+          <stop offset=".84" stop-color="#8e24aa"/>
+          <stop offset="1"   stop-color="#f4511e"/>
+        </linearGradient>
+      </defs>
+      <text x="500" y="185" text-anchor="middle"
+            font-family="'Kaushan Script','Brush Script MT',cursive"
+            font-size="198" stroke="var(--halo)" stroke-width="18"
+            stroke-linejoin="round" fill="none">Brushstrokes</text>
+      <path d="M40 218 Q500 182 960 212" fill="none" stroke="url(#alg)" stroke-width="9" stroke-linecap="round"/>
+      <text x="500" y="185" text-anchor="middle"
+            font-family="'Kaushan Script','Brush Script MT',cursive"
+            font-size="198" fill="url(#alg2)">Brushstrokes</text>
+    </svg>
+  </h1>
+
+  <section class="au-card">
+
+    <!-- ══ CREATE ACCOUNT ══ -->
+    <form id="signupForm" class="au-view" novalidate hidden>
+      <h2>Create your account</h2>
+      <p class="au-sub">Join the Brushstrokes student space.</p>
+
+      <div class="au-field">
+        <label for="suName">Full name</label>
+        <input id="suName" type="text" autocomplete="name" maxlength="60" required>
+      </div>
+
+      <div class="au-field">
+        <label for="suCourse">Course</label>
+        <input id="suCourse" type="text" maxlength="80" placeholder="e.g. B.Com (Hons)" required>
+      </div>
+
+      <fieldset class="au-field">
+        <legend>Year</legend>
+        <div class="au-chips">
+          <label class="au-chip"><input type="radio" name="suYear" value="1st"><span>1st year</span></label>
+          <label class="au-chip"><input type="radio" name="suYear" value="2nd"><span>2nd year</span></label>
+          <label class="au-chip"><input type="radio" name="suYear" value="3rd"><span>3rd year</span></label>
+        </div>
+      </fieldset>
+
+      <div class="au-field">
+        <label for="suPass">Create password</label>
+        <div class="au-pw">
+          <input id="suPass" type="password" autocomplete="new-password" maxlength="64" required>
+          <button type="button" class="au-pwt" data-target="suPass" aria-pressed="false">Show</button>
+        </div>
+        <p class="au-hint">At least 6 characters.</p>
+      </div>
+
+      <div class="au-field">
+        <label for="suQ">Security question</label>
+        <select id="suQ" required>
+          <option value="" disabled selected>Choose a question</option>
+        </select>
+      </div>
+
+      <div class="au-field">
+        <label for="suA">Your answer</label>
+        <input id="suA" type="text" autocomplete="off" maxlength="60" required>
+        <p class="au-hint">You'll need this answer to reset your password. Spelling matters, capital letters don't.</p>
+      </div>
+
+      <p class="au-msg" id="suMsg" role="alert" hidden></p>
+      <button class="au-btn" id="suBtn" type="submit">Create account</button>
+      <p class="au-switch">Already have an account? <button type="button" class="au-link" data-go="login">Log in</button></p>
+    </form>
+
+    <!-- ══ LOGIN ══ -->
+    <form id="loginForm" class="au-view" novalidate hidden>
+      <h2>Log in</h2>
+      <p class="au-sub">Use your full name and password. Capital letters in your name don't matter.</p>
+
+      <div class="au-field">
+        <label for="lgName">Full name</label>
+        <input id="lgName" type="text" autocomplete="username" maxlength="60" required>
+      </div>
+
+      <div class="au-field">
+        <label for="lgPass">Password</label>
+        <div class="au-pw">
+          <input id="lgPass" type="password" autocomplete="current-password" maxlength="64" required>
+          <button type="button" class="au-pwt" data-target="lgPass" aria-pressed="false">Show</button>
+        </div>
+      </div>
+
+      <p class="au-msg" id="lgMsg" role="alert" hidden></p>
+      <button class="au-btn" id="lgBtn" type="submit">Log in</button>
+      <p class="au-switch">
+        <button type="button" class="au-link" data-go="forgot">Forgot password?</button>
+        <span class="au-sep" aria-hidden="true">|</span>
+        <button type="button" class="au-link" data-go="signup">Create account</button>
+      </p>
+    </form>
+
+    <!-- ══ FORGOT — step 1: name ══ -->
+    <form id="fgNameForm" class="au-view" novalidate hidden>
+      <h2>Reset your password</h2>
+      <p class="au-sub">Enter the full name you signed up with.</p>
+
+      <div class="au-field">
+        <label for="fgName">Full name</label>
+        <input id="fgName" type="text" autocomplete="username" maxlength="60" required>
+      </div>
+
+      <p class="au-msg" id="fgNameMsg" role="alert" hidden></p>
+      <button class="au-btn" id="fgNameBtn" type="submit">Continue</button>
+      <p class="au-switch"><button type="button" class="au-link" data-go="login">Back to log in</button></p>
+    </form>
+
+    <!-- ══ FORGOT — step 2: security answer ══ -->
+    <form id="fgAnswerForm" class="au-view" novalidate hidden>
+      <h2>Answer your security question</h2>
+      <p class="au-q" id="fgQuestion"></p>
+
+      <div class="au-field">
+        <label for="fgAnswer">Your answer</label>
+        <input id="fgAnswer" type="text" autocomplete="off" maxlength="60" required>
+      </div>
+
+      <p class="au-msg" id="fgAnswerMsg" role="alert" hidden></p>
+      <button class="au-btn" id="fgAnswerBtn" type="submit">Check answer</button>
+      <p class="au-switch"><button type="button" class="au-link" data-go="forgot">Use a different name</button></p>
+    </form>
+
+    <!-- ══ FORGOT — step 3: new password ══ -->
+    <form id="fgNewForm" class="au-view" novalidate hidden>
+      <h2>Set a new password</h2>
+      <p class="au-sub">That answer matched. Choose a new password.</p>
+
+      <div class="au-field">
+        <label for="fgNewPass">New password</label>
+        <div class="au-pw">
+          <input id="fgNewPass" type="password" autocomplete="new-password" maxlength="64" required>
+          <button type="button" class="au-pwt" data-target="fgNewPass" aria-pressed="false">Show</button>
+        </div>
+        <p class="au-hint">At least 6 characters.</p>
+      </div>
+
+      <p class="au-msg" id="fgNewMsg" role="alert" hidden></p>
+      <button class="au-btn" id="fgNewBtn" type="submit">Save new password</button>
+      <p class="au-switch"><button type="button" class="au-link" data-go="login">Cancel</button></p>
+    </form>
+
+  </section>
+
+  <p class="au-foot">Brushstroke Society · Ramanujan College</p>
+</div>
+</div>
+
 
 <!-- ══ CARNIVAL CONFETTI CANVAS (behind everything) ══ -->
 <canvas id="confettiCanvas"></canvas>
@@ -342,6 +514,6 @@
 <button id="installBtn" class="install" hidden>📲 Install app</button>
 <button id="themeToggle" class="theme" aria-label="Toggle dark mode"><span>🌙</span></button>
 <div class="toast" id="toast" role="status"></div>
-<script src="bs.js"></script>
+<script type="module" src="bs.js"></script>
 </body>
 </html>
