@@ -10,7 +10,8 @@ import {
   createUserWithEmailAndPassword, signInWithEmailAndPassword, updatePassword, signOut
 } from "https://www.gstatic.com/firebasejs/13.2.0/firebase-auth.js";
 import {
-  getFirestore, doc, getDoc, writeBatch, updateDoc, serverTimestamp
+  getFirestore, doc, getDoc, setDoc, deleteDoc, writeBatch, updateDoc, serverTimestamp,
+  collection, query, where, onSnapshot
 } from "https://www.gstatic.com/firebasejs/13.2.0/firebase-firestore.js";
 
 const $ = s => document.querySelector(s);
@@ -233,7 +234,14 @@ if (!calm) {
 $$(".dab").forEach(a => {
   a.addEventListener("click", async e => {
     e.preventDefault();
-    if (a.dataset.page === "home") return say("Aap Home par hi ho 🏠");
+    const page = a.dataset.page;
+    if (page === "home" || page === "activity") {
+      if (page === currentPage()) return say(page === "home" ? "Aap Home par hi ho 🏠" : "Aap Activity page par hi ho 🎨");
+      const pb = a.getBoundingClientRect();
+      if (!calm) burstConfetti(14, pb.left + pb.width / 2, pb.top + pb.height / 2);
+      showPage(page);
+      return;
+    }
     const url = a.getAttribute("href");
     try {
       const r = await fetch(url, { method: "HEAD" });
@@ -416,6 +424,7 @@ let appShown = false;
 function showApp() {
   htmlEl.classList.remove("auth-pending", "auth-out");
   htmlEl.classList.add("auth-in");
+  routeFromHash();
   ["lgName", "lgPass"].forEach(id => { A(id).value = ""; });
   if (!appShown) {
     appShown = true;
@@ -824,7 +833,7 @@ onAuthStateChanged(auth, async user => {
   clearTimeout(auFailSafe);
   if (auBusy) return;               // a flow above is signing in/out on purpose
   const token = ++auToken;
-  if (!user) { showAuth(); return; }
+  if (!user) { actStop(); showAuth(); return; }
 
   let p = {};
   try {
@@ -835,5 +844,339 @@ onAuthStateChanged(auth, async user => {
   }
   if (token !== auToken || auBusy) return;
   applyStudent({ name: p.fullName || "Student", course: p.course || "", year: p.year || "" });
+  actStart(user, p.fullName || "Student");
   showApp();
 });
+
+// ════════════════════════════════════════════════════════════
+//  PAGES + ACTIVITY
+//  The Activity page opens inside this same page (no reload), so the
+//  in-memory login session is kept. The palette moves with you.
+//  Data: Firestore collection "activities" in the student project.
+//  The Brushstroke admin app reads the same collection live
+//  (admin side: student-activities.js).
+// ════════════════════════════════════════════════════════════
+const mainArea = $("#mainArea");
+const currentPage = () => (mainArea.dataset.view === "activity" ? "activity" : "home");
+
+function showPage(page, push = true) {
+  const toAct = page === "activity";
+  mainArea.dataset.view = toAct ? "activity" : "home";
+  $("#activityPage").hidden = !toAct;
+  (toAct ? $("#slotActivity") : $("#slotHome")).appendChild($("#stage"));
+  $$(".dab").forEach(d => {
+    if (d.dataset.page === page) d.setAttribute("aria-current", "page");
+    else d.removeAttribute("aria-current");
+  });
+  const want = toAct ? "#activity" : "";
+  if (push && location.hash !== want) {
+    history.pushState(null, "", location.pathname + location.search + want);
+  }
+  window.scrollTo(0, 0);
+}
+function routeFromHash() { showPage(location.hash === "#activity" ? "activity" : "home", false); }
+const onRoute = () => { if (htmlEl.classList.contains("auth-in")) routeFromHash(); };
+window.addEventListener("hashchange", onRoute);
+window.addEventListener("popstate", onRoute);
+
+// ── helpers ──────────────────────────────────────────────────
+const ACT_MAX_SHOTS = 3;
+const ACT_SHOT_CHARS = 220000;          // ~165 KB per image, 3 fit easily in a 1 MiB document
+const mk = (tag, cls, text) => {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (text != null) e.textContent = text;
+  return e;
+};
+const pad2 = n => String(n).padStart(2, "0");
+const todayISO = () => { const d = new Date(); return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`; };
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+function actDateParts(iso) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || "");
+  if (!m) return { day: "--", mon: "" };
+  return { day: m[3], mon: `${MONTHS[+m[2] - 1] || ""} ${m[1]}` };
+}
+const actTimeout = (p, ms = 20000) => Promise.race([
+  p, new Promise((_, rej) => setTimeout(() => rej(Object.assign(new Error("timeout"), { code: "timeout" })), ms))
+]);
+function actMsg(text, kind = "error") {
+  const m = A("actMsg");
+  m.textContent = text; m.className = `act-msg ${kind}`; m.hidden = !text;
+}
+const isShot = s => typeof s === "string" && /^data:image\//.test(s);
+
+// ── state ────────────────────────────────────────────────────
+let actUid = "", actHash = "", actStudent = "";
+let actUnsub = null, actItems = [];
+let actEditId = null, actConfirmId = null, actNewRef = null;
+let actShots = [];                      // screenshots currently in the form (data URLs)
+let actBusy = false;
+
+// ── image -> small JPEG data URL ─────────────────────────────
+async function actCompress(file) {
+  if (!file.type || !file.type.startsWith("image/")) throw new Error("not-image");
+  if (file.size > 25 * 1024 * 1024) throw new Error("too-big");
+  let bmp;
+  try { bmp = await createImageBitmap(file); }
+  catch {
+    bmp = await new Promise((res, rej) => {
+      const url = URL.createObjectURL(file), im = new Image();
+      im.onload = () => { URL.revokeObjectURL(url); res(im); };
+      im.onerror = () => { URL.revokeObjectURL(url); rej(new Error("decode")); };
+      im.src = url;
+    });
+  }
+  const w0 = bmp.width, h0 = bmp.height;
+  let scale = Math.min(1, 1280 / Math.max(w0, h0)), quality = 0.78;
+  const canvas = document.createElement("canvas");
+  try {
+    for (let i = 0; i < 12; i++) {
+      canvas.width = Math.max(1, Math.round(w0 * scale));
+      canvas.height = Math.max(1, Math.round(h0 * scale));
+      const c = canvas.getContext("2d");
+      c.fillStyle = "#fff"; c.fillRect(0, 0, canvas.width, canvas.height);   // PNG transparency -> white
+      c.drawImage(bmp, 0, 0, canvas.width, canvas.height);
+      const url = canvas.toDataURL("image/jpeg", quality);
+      if (url.length <= ACT_SHOT_CHARS) return url;
+      if (quality > 0.5) quality -= 0.1; else scale *= 0.8;
+    }
+  } finally { if (bmp.close) bmp.close(); }
+  throw new Error("too-big");
+}
+
+// ── form: screenshots ────────────────────────────────────────
+function actRenderShots() {
+  const box = A("actShots");
+  box.textContent = "";
+  actShots.forEach((src, i) => {
+    const w = mk("div", "act-shot");
+    const img = new Image(); img.src = src; img.alt = `Screenshot ${i + 1}`;
+    const x = mk("button", "act-shot-x", "×");
+    x.type = "button"; x.setAttribute("aria-label", `Remove screenshot ${i + 1}`);
+    x.addEventListener("click", () => { actShots.splice(i, 1); actRenderShots(); });
+    w.append(img, x); box.appendChild(w);
+  });
+  A("actUpload").hidden = actShots.length >= ACT_MAX_SHOTS;
+  A("actShotHint").textContent = actShots.length >= ACT_MAX_SHOTS
+    ? "3 of 3 added. Remove one to add a different screenshot."
+    : `${actShots.length} of ${ACT_MAX_SHOTS} added. Large photos are shrunk automatically.`;
+}
+
+A("actFile").addEventListener("change", async e => {
+  const files = [...e.target.files];
+  e.target.value = "";
+  if (!files.length) return;
+  const room = ACT_MAX_SHOTS - actShots.length;
+  if (room <= 0) return actMsg(`You can add up to ${ACT_MAX_SHOTS} screenshots. Remove one first.`);
+  actBusy = true; A("actSubmit").disabled = true;
+  actMsg("Processing image…", "ok");
+  let skipped = files.length > room;
+  try {
+    for (const f of files.slice(0, room)) {
+      actShots.push(await actCompress(f));
+      actRenderShots();
+    }
+    actMsg(skipped ? `Only ${ACT_MAX_SHOTS} screenshots are allowed — extra files were skipped.` : "", "error");
+  } catch (err) {
+    actMsg(err.message === "not-image" ? "Please choose an image file (JPG or PNG)."
+      : err.message === "too-big" ? "That image is too large. Try a smaller screenshot."
+      : "Couldn't read that image. Use a JPG or PNG screenshot.");
+  } finally {
+    actBusy = false; A("actSubmit").disabled = false;
+  }
+});
+
+// ── form: reset / edit / cancel ──────────────────────────────
+function actReset() {
+  actEditId = null; actShots = [];
+  A("actForm").reset();
+  A("actDate").max = todayISO();
+  actNewRef = doc(collection(db, "activities"));       // fixed id: a retry can never create a duplicate
+  A("actFormTitle").textContent = "Add an event";
+  A("actSubmit").textContent = "Add event";
+  A("actCancel").hidden = true;
+  actMsg("");
+  actRenderShots();
+  actRender();
+}
+function actEdit(id) {
+  const it = actItems.find(x => x.id === id);
+  if (!it) return;
+  actEditId = id; actConfirmId = null;
+  A("actDate").max = todayISO();
+  A("actDate").value = it.eventDate || "";
+  A("actEvent").value = it.eventName || "";
+  A("actMode").value = it.mode || "";
+  A("actCollege").value = it.college || "";
+  actShots = (it.shots || []).filter(isShot).slice(0, ACT_MAX_SHOTS);
+  A("actFormTitle").textContent = "Edit event";
+  A("actSubmit").textContent = "Save changes";
+  A("actCancel").hidden = false;
+  actMsg(""); actRenderShots(); actRender();
+  A("actForm").scrollIntoView({ behavior: calm ? "auto" : "smooth", block: "start" });
+  A("actEvent").focus({ preventScroll: true });
+}
+A("actCancel").addEventListener("click", actReset);
+
+// ── form: save (add or edit) ─────────────────────────────────
+A("actForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  if (actBusy || !actUid) return;
+  actMsg("");
+  const eventDate = A("actDate").value;
+  const eventName = tidy(A("actEvent").value);
+  const mode = A("actMode").value;
+  const college = tidy(A("actCollege").value);
+
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(eventDate) || isNaN(Date.parse(eventDate))) return actMsg("Pick the event date from the calendar.");
+  if (eventDate > todayISO()) return actMsg("The event date can't be in the future.");
+  if (eventName.length < 2) return actMsg("Enter the event name.");
+  if (mode !== "Online" && mode !== "Offline") return actMsg("Choose Online or Offline.");
+  if (college.length < 2) return actMsg("Enter the college name.");
+  if (!actShots.length) return actMsg("Add at least one screenshot as proof.");
+
+  const btn = A("actSubmit");
+  actBusy = true; btn.disabled = true;
+  btn.textContent = actEditId ? "Saving…" : "Adding…";
+  const editing = actEditId;
+  try {
+    const data = { eventDate, eventName, mode, college, shots: [...actShots], updatedAt: serverTimestamp() };
+    if (editing) {
+      await actTimeout(updateDoc(doc(db, "activities", editing), data));
+    } else {
+      await actTimeout(setDoc(actNewRef, {
+        ...data, uid: actUid, nameHash: actHash, studentName: actStudent, createdAt: serverTimestamp()
+      }));
+    }
+    say(editing ? "Event updated ✅" : "Event added 🎨");
+    actReset();
+  } catch (err) {
+    console.error("Activity save failed", err);
+    const code = err && err.code;
+    if (code === "not-found") { actMsg("This event no longer exists."); actReset(); }
+    else actMsg(code === "permission-denied" ? "Couldn't save. Check that the Firestore rules are published."
+      : code === "timeout" ? "Saving is taking too long. Check your connection and try again."
+      : "Couldn't save. Please try again.");
+  } finally {
+    actBusy = false; btn.disabled = false;
+    btn.textContent = actEditId ? "Save changes" : "Add event";
+  }
+});
+
+// ── delete ───────────────────────────────────────────────────
+async function actDelete(id) {
+  actConfirmId = null;
+  try {
+    await actTimeout(deleteDoc(doc(db, "activities", id)));
+    if (actEditId === id) actReset();
+    say("Event deleted 🗑️");
+  } catch (err) {
+    console.error("Activity delete failed", err);
+    say("Couldn't delete. Please try again.");
+    actRender();
+  }
+}
+
+// ── list ─────────────────────────────────────────────────────
+function actBtn(label, cls, onClick) {
+  const b = mk("button", `act-btn small ${cls}`, label);
+  b.type = "button"; b.addEventListener("click", onClick);
+  return b;
+}
+function actRender() {
+  const list = A("actList");
+  list.textContent = "";
+  const ts = x => (x.createdAt && x.createdAt.toMillis ? x.createdAt.toMillis() : Date.now());
+  const items = [...actItems].sort((a, b) => (b.eventDate || "").localeCompare(a.eventDate || "") || ts(b) - ts(a));
+  A("actCount").textContent = items.length ? `${items.length} event${items.length === 1 ? "" : "s"}` : "";
+  if (!items.length) {
+    list.appendChild(mk("p", "act-empty", "No events added yet. Add your first one above."));
+    return;
+  }
+  items.forEach(it => {
+    const card = mk("article", "act-item" + (it.id === actEditId ? " is-editing" : ""));
+    card.dataset.id = it.id;
+
+    const top = mk("div", "act-item-top");
+    const dt = actDateParts(it.eventDate);
+    const chip = mk("div", "act-date");
+    chip.append(mk("span", "d", dt.day), mk("span", "m", dt.mon));
+    const info = mk("div", "act-info");
+    info.appendChild(mk("h4", "", it.eventName || ""));
+    const meta = mk("p", "act-meta");
+    meta.append(mk("span", "act-pill " + (it.mode === "Online" ? "online" : "offline"), it.mode || ""),
+                mk("span", "act-college", it.college || ""));
+    info.appendChild(meta);
+    top.append(chip, info);
+    card.appendChild(top);
+
+    const thumbs = mk("div", "act-thumbs");
+    (it.shots || []).filter(isShot).forEach((src, i) => {
+      const b = mk("button", "act-thumb");
+      b.type = "button"; b.setAttribute("aria-label", `View screenshot ${i + 1} of ${it.eventName}`);
+      const img = new Image(); img.src = src; img.alt = ""; img.loading = "lazy";
+      b.appendChild(img);
+      b.addEventListener("click", () => actOpenLightbox(src));
+      thumbs.appendChild(b);
+    });
+    card.appendChild(thumbs);
+
+    const acts = mk("div", "act-item-actions");
+    if (actConfirmId === it.id) {
+      acts.append(
+        mk("span", "act-confirm", "Delete this event?"),
+        actBtn("Yes, delete", "danger", () => actDelete(it.id)),
+        actBtn("Keep it", "ghost", () => { actConfirmId = null; actRender(); })
+      );
+    } else {
+      acts.append(
+        actBtn("Edit", "primary", () => actEdit(it.id)),
+        actBtn("Delete", "ghost", () => { actConfirmId = it.id; actRender(); })
+      );
+    }
+    card.appendChild(acts);
+    list.appendChild(card);
+  });
+}
+
+// ── full-size screenshot viewer ──────────────────────────────
+function actOpenLightbox(src) {
+  A("actLbImg").src = src;
+  A("actLightbox").hidden = false;
+  A("actLbClose").focus();
+}
+function actCloseLightbox() { A("actLightbox").hidden = true; A("actLbImg").removeAttribute("src"); }
+A("actLbClose").addEventListener("click", actCloseLightbox);
+A("actLightbox").addEventListener("click", e => { if (e.target === A("actLightbox")) actCloseLightbox(); });
+document.addEventListener("keydown", e => { if (e.key === "Escape" && !A("actLightbox").hidden) actCloseLightbox(); });
+
+// ── live data (starts after login, stops on logout) ──────────
+function actStart(user, name) {
+  A("actName").textContent = name;
+  if (actUid === user.uid && actUnsub) return;
+  actStop();
+  actUid = user.uid;
+  actHash = String(user.email || "").split("@")[0];      // = nameHash, also what the rules check
+  actStudent = name;
+  actReset();
+  const q = query(collection(db, "activities"), where("uid", "==", user.uid));
+  actUnsub = onSnapshot(q, snap => {
+    actItems = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    if (actEditId && !actItems.some(i => i.id === actEditId)) {
+      actReset();
+      actMsg("That event was deleted, so editing was cancelled.");
+    }
+    actRender();
+  }, err => {
+    console.error("Activities listener failed", err);
+    A("actList").textContent = "";
+    A("actList").appendChild(mk("p", "act-empty",
+      "Couldn't load your events. Check your connection and that the Firestore rules are published."));
+  });
+}
+function actStop() {
+  if (actUnsub) actUnsub();
+  actUnsub = null; actUid = ""; actItems = []; actEditId = null; actConfirmId = null; actShots = [];
+  A("actList").textContent = "";
+  actCloseLightbox();
+}
