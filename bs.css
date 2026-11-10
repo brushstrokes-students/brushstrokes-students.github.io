@@ -984,3 +984,21 @@ main[data-view="activity"] > .quest-section { display: none; }
   .act-page { animation: none; }
   .act-btn, .act-field input, .act-field select { transition: none; }
 }
+
+/* ============================================================
+   ART QUOTE (under the canvas on the home page)
+   ============================================================ */
+.art-quote {
+  width: 100%; max-width: 740px; margin: 0; padding: 22px 26px 4px;
+  text-align: center; line-height: 1.4;
+  font-family: "Fredoka One", cursive;
+  font-size: clamp(1.15rem, 4.2vw, 1.6rem);
+  background: linear-gradient(90deg, #e0476f, #f27a1a, #d99a00, #3fa856, #2a78c9, #8e44d9, #e0476f);
+  background-size: 200% 100%;
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+  filter: drop-shadow(0 2px 6px rgba(255, 100, 150, .25));
+  animation: rainbowShift 6s linear infinite;
+}
+main[data-view="activity"] > .art-quote { display: none; }
+@media (prefers-reduced-motion: reduce) { .art-quote { animation: none; } }

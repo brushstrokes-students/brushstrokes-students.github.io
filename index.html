@@ -289,12 +289,6 @@
 
       <!-- Canvas frame with linen texture -->
       <div class="board">
-        <!-- XP / Level badge — Paint Quest element -->
-        <div class="xp-badge" title="Artist Level">
-          <span class="xp-icon">🎨</span>
-          <span class="xp-level">Lvl 1</span>
-        </div>
-
         <div class="avatar-wrap">
           <div class="avatar" id="avatar"></div>
           <!-- Paint Quest: avatar glow ring -->
@@ -317,17 +311,6 @@
             <svg viewBox="0 0 24 24"><path d="M3 21h18M5 21V9l7-5 7 5v12M9 21v-6h6v6"/></svg>
             <span id="college"></span>
           </p>
-
-          <!-- Paint Quest XP Bar -->
-          <div class="xp-bar-wrap" title="Attendance XP">
-            <div class="xp-bar-label">
-              <span>🏆 Artist XP</span>
-              <span class="xp-val">750 / 1000</span>
-            </div>
-            <div class="xp-bar-track">
-              <div class="xp-bar-fill" style="--xp:75%"></div>
-            </div>
-          </div>
         </div>
 
         <div class="flourish"><span>🎨</span></div>
@@ -340,6 +323,9 @@
       </div>
     </section>
   </div>
+
+  <!-- Art quote under the canvas -->
+  <p class="art-quote" id="artQuote">“Paint boldly — every stroke is part of your story.”</p>
 
   <!-- ══ ACTIVITY PAGE (opens from the palette; same page, so the login session is kept) ══ -->
   <section id="activityPage" class="act-page" hidden aria-labelledby="actWelcome">
@@ -403,15 +389,8 @@
     <div class="stage-slot" id="slotActivity"></div>
   </section>
 
-  <!-- ══ ART CARNIVAL — QUEST BOARD ══ -->
+  <!-- ══ PALETTE NAV ══ -->
   <div class="carnival-section">
-    <div class="carnival-banner">
-      <span class="carnival-star">⭐</span>
-      <h2 class="carnival-title">🎪 Art Carnival — Quest Board</h2>
-      <span class="carnival-star">⭐</span>
-    </div>
-    <p class="carnival-sub">Choose your quest, brave artist!</p>
-
     <!-- Spinning palette wheel nav -->
     <div class="stage-slot" id="slotHome">
     <div class="stage" id="stage">
@@ -539,32 +518,6 @@
     </div>
     </div><!-- /#slotHome -->
   </div>
-
-  <!-- ══ PAINT QUEST — ACHIEVEMENT CARDS ══ -->
-  <div class="quest-section">
-    <h3 class="quest-heading">🏅 Your Achievements</h3>
-    <div class="quest-grid">
-      <div class="quest-card" style="--qc:#e0476f">
-        <div class="quest-icon">🎨</div>
-        <div class="quest-name">First Stroke</div>
-        <div class="quest-desc">Joined Brushstrokes</div>
-        <div class="quest-badge">✓ Unlocked</div>
-      </div>
-      <div class="quest-card locked" style="--qc:#ffa270">
-        <div class="quest-icon">🌟</div>
-        <div class="quest-name">Star Artist</div>
-        <div class="quest-desc">90% attendance</div>
-        <div class="quest-badge">🔒 Locked</div>
-      </div>
-      <div class="quest-card locked" style="--qc:#ffd45c">
-        <div class="quest-icon">🏆</div>
-        <div class="quest-name">Gallery Master</div>
-        <div class="quest-desc">All events attended</div>
-        <div class="quest-badge">🔒 Locked</div>
-      </div>
-    </div>
-  </div>
-
 </main>
 
 <footer>

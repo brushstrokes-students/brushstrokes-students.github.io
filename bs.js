@@ -196,13 +196,9 @@ function playEntry() {
     .from(".avatar-wrap",   { scale: 0, opacity: 0, duration: .55, ease: "back.out(2.5)" }, "-=.3")
     .from(".info h2",       { x: -28, opacity: 0, duration: .45 }, "-=.25")
     .from(".row",           { x: -18, opacity: 0, stagger: .08, duration: .38 }, "-=.2")
-    .from(".xp-bar-wrap",   { opacity: 0, y: 10, duration: .4 }, "-=.1")
-    .from(".xp-badge",      { scale: 0, rotation: -15, opacity: 0, duration: .45, ease: "back.out(2)" }, "-=.6")
-    .from(".carnival-banner", { opacity: 0, y: 20, duration: .5 }, "-=.1")
-    .from(".carnival-sub",    { opacity: 0, duration: .3 }, "-=.2")
+    .from(".art-quote",     { opacity: 0, y: 14, duration: .5 }, "-=.1")
     .from(".stage",         { y: 60, opacity: 0, scale: .9, duration: .75, ease: "back.out(1.3)" }, "-=.3")
     .from(".brush",         { x: -50, opacity: 0, rotate: -20, duration: .65, ease: "back.out(1.5)" }, "-=.45")
-    .from(".quest-card",    { y: 30, opacity: 0, stagger: .12, duration: .5, ease: "back.out(1.6)" }, "-=.2")
     .from("footer",         { opacity: 0, duration: .4 }, "-=.1");
 }
 
@@ -288,16 +284,6 @@ if (!calm && typeof gsap !== "undefined") {
   $$(".dab").forEach(dab => {
     dab.addEventListener("mouseenter", () => gsap.to(dab, { scale:1.14, duration:.22, ease:"back.out(2)" }));
     dab.addEventListener("mouseleave", () => gsap.to(dab, { scale:1,    duration:.28, ease:"power2.out" }));
-  });
-}
-
-// ── Quest card hover — mini confetti ─────────────────────────
-if (!calm) {
-  $$(".quest-card:not(.locked)").forEach(card => {
-    card.addEventListener("mouseenter", () => {
-      const b = card.getBoundingClientRect();
-      burstConfetti(6, b.left + b.width/2, b.top + b.height/2);
-    });
   });
 }
 
