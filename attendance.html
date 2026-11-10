@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Attendance — Brushstrokes</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Kaushan+Script&family=Nunito:wght@400;600;700;800;900&family=Playfair+Display:ital,wght@0,700;1,400&family=Fredoka+One&display=swap" rel="stylesheet">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#5c0f20">
+  <link rel="apple-touch-icon" href="icon-180.png">
+  <link rel="icon" href="icon-192.png">
+  <link rel="stylesheet" href="bs.css">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{--accent:#5c0f20;--accent2:#9b1738;--bg:#fff9f4;--surface:#fff;--surface2:#fff3ea;--border:#e8d5c0;--text:#1a0a00;--text2:#6b4c2a;--shadow:0 2px 12px rgba(80,30,10,.10);--radius:16px}
+    [data-theme=dark]{--bg:#1a0e08;--surface:#2a1a0e;--surface2:#3a2210;--border:#5a3a1a;--text:#f5e8d8;--text2:#c8a070}
+    body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+    .page{max-width:900px;margin:0 auto;padding:24px 16px 80px;animation:fadeUp .5s ease both}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+    .back{display:inline-flex;align-items:center;gap:6px;color:var(--accent);font-weight:700;font-size:.9rem;text-decoration:none;margin-bottom:20px;padding:8px 16px;border-radius:999px;background:rgba(92,15,32,.08);transition:background .15s}
+    .back:hover{background:rgba(92,15,32,.14)}
+    /* Hero */
+    .hero{background:linear-gradient(135deg,#5c0f20,#9b1738 50%,#e8764f);border-radius:20px;padding:28px 24px;color:#fff;margin-bottom:24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;box-shadow:0 8px 24px rgba(92,15,32,.30)}
+    .hero-name{font-family:'Kaushan Script',cursive;font-size:1.9rem}
+    .hero-sub{font-size:.88rem;opacity:.85;margin-top:4px}
+    .hero-pct{font-family:'Fredoka One',cursive;font-size:3.2rem;line-height:1;text-shadow:0 2px 8px rgba(0,0,0,.2)}
+    .hero-pct-lbl{font-size:.75rem;opacity:.8;text-align:center;margin-top:2px}
+    /* Chart card */
+    .chart-card{background:var(--surface);border:1.5px solid var(--border);border-radius:20px;padding:24px;display:flex;align-items:center;gap:28px;flex-wrap:wrap;margin-bottom:20px;box-shadow:var(--shadow)}
+    .pie-wrap{position:relative;flex-shrink:0;width:160px;height:160px}
+    .pie-wrap svg{width:100%;height:100%}
+    .pie-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none}
+    .pie-num{font-family:'Fredoka One',cursive;font-size:1.7rem;color:var(--text)}
+    .pie-lbl{font-size:.7rem;color:var(--text2);font-weight:700}
+    .legend{display:flex;flex-direction:column;gap:8px}
+    .leg-item{display:flex;align-items:center;gap:8px;font-size:.88rem;font-weight:700}
+    .leg-dot{width:14px;height:14px;border-radius:50%;flex-shrink:0}
+    .leg-count{color:var(--text2);font-size:.82rem;margin-left:auto}
+    /* Boxes */
+    .boxes{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:24px}
+    @media(max-width:520px){.boxes{grid-template-columns:1fr}}
+    .box{border-radius:16px;padding:18px 14px;cursor:pointer;transition:transform .2s,box-shadow .2s;display:flex;flex-direction:column;gap:4px;border:2px solid transparent;text-align:center;position:relative;overflow:hidden}
+    .box:hover{transform:translateY(-3px);box-shadow:0 8px 24px rgba(0,0,0,.12)}
+    .box.active{border-color:currentColor}
+    .box-p{color:#2e7d32;background:#e8f5e9}
+    .box-h{color:#0288d1;background:#e1f5fe}
+    .box-a{color:#c62828;background:#ffebee}
+    .box-label{font-size:.78rem;font-weight:700;opacity:.8}
+    .box-num{font-family:'Fredoka One',cursive;font-size:2.2rem;line-height:1}
+    .box-pct{font-size:.78rem;font-weight:700;opacity:.75}
+    .box-go{font-size:.72rem;font-weight:700;opacity:.6;margin-top:4px}
+    /* Records */
+    .records{background:var(--surface);border:1.5px solid var(--border);border-radius:20px;padding:20px;box-shadow:var(--shadow);display:none}
+    .records.open{display:block;animation:fadeUp .3s ease both}
+    .rec-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px}
+    .rec-title{font-weight:800;font-size:1rem}
+    .rec-pill{padding:4px 14px;border-radius:999px;font-size:.8rem;font-weight:700}
+    .pill-p{background:#e8f5e9;color:#2e7d32}.pill-h{background:#e1f5fe;color:#0288d1}.pill-a{background:#ffebee;color:#c62828}
+    .search-wrap{position:relative;margin-bottom:14px}
+    .search-wrap input{width:100%;padding:10px 14px 10px 36px;border:1.5px solid var(--border);border-radius:999px;font-size:.9rem;font-family:inherit;background:var(--surface2);color:var(--text)}
+    .search-wrap input:focus{outline:none;border-color:var(--accent)}
+    .search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);pointer-events:none}
+    .filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+    .chip{padding:5px 14px;border-radius:999px;border:1.5px solid var(--border);font-size:.78rem;font-weight:700;cursor:pointer;background:var(--surface2);color:var(--text2);font-family:inherit;transition:all .15s}
+    .chip.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+    .count{font-size:.82rem;color:var(--text2);font-weight:700;margin-bottom:10px}
+    .session-list{display:flex;flex-direction:column;gap:8px}
+    .s-item{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:12px;background:var(--surface2);border:1px solid var(--border)}
+    .s-date{flex-shrink:0;min-width:80px;font-weight:700;font-size:.88rem}
+    .s-title{flex:1;font-size:.88rem;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .s-mode{padding:2px 10px;border-radius:999px;font-size:.72rem;font-weight:700;flex-shrink:0}
+    .mode-off{background:#f3e5f5;color:#7b1fa2}.mode-on{background:#e3f2fd;color:#1565c0}
+    .empty{text-align:center;padding:24px;color:var(--text2);font-size:.9rem}
+    /* Status screens */
+    .status{text-align:center;padding:60px 20px;max-width:400px;margin:0 auto}
+    .status-icon{font-size:4rem;margin-bottom:16px}
+    .status-title{font-family:'Playfair Display',serif;font-size:1.5rem;margin-bottom:10px}
+    .status-sub{color:var(--text2);font-size:.9rem;line-height:1.6}
+  </style>
+</head>
+<body>
+<div id="root" style="display:none">
+<div class="page">
+  <a class="back" href="index.html">← Back to Home</a>
+
+  <div id="sPending" class="status" style="display:none">
+    <div class="status-icon">⏳</div>
+    <div class="status-title">Approval Pending</div>
+    <p class="status-sub">Your registration is waiting for admin approval.</p>
+  </div>
+  <div id="sRejected" class="status" style="display:none">
+    <div class="status-icon">❌</div>
+    <div class="status-title">Account Not Approved</div>
+    <p class="status-sub">Please contact the Brushstrokes admin.</p>
+  </div>
+  <div id="sUnverified" class="status" style="display:none">
+    <div class="status-icon">🔍</div>
+    <div class="status-title">Name Verification Pending</div>
+    <p class="status-sub">Your account is approved but your attendance has not been synced yet. Please ask the admin to sync your attendance.</p>
+  </div>
+
+  <div id="attContent" style="display:none">
+    <div class="hero">
+      <div>
+        <div class="hero-name" id="hName">—</div>
+        <div class="hero-sub" id="hSub">Your attendance record</div>
+      </div>
+      <div>
+        <div class="hero-pct" id="hPct">—%</div>
+        <div class="hero-pct-lbl">Attendance</div>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <div class="pie-wrap">
+        <svg id="pie" viewBox="0 0 100 100" style="transform:rotate(-90deg)"></svg>
+        <div class="pie-center">
+          <span class="pie-num" id="pieTotal">0</span>
+          <span class="pie-lbl">Sessions</span>
+        </div>
+      </div>
+      <div class="legend">
+        <div class="leg-item"><div class="leg-dot" style="background:#4caf50"></div>Present<span class="leg-count" id="lgP">0</span></div>
+        <div class="leg-item"><div class="leg-dot" style="background:#29b6f6"></div>Half Present<span class="leg-count" id="lgH">0</span></div>
+        <div class="leg-item"><div class="leg-dot" style="background:#ef5350"></div>Absent<span class="leg-count" id="lgA">0</span></div>
+      </div>
+    </div>
+
+    <div class="boxes">
+      <button class="box box-p" data-s="present"><span class="box-label">Present</span><span class="box-num" id="nP">0</span><span class="box-pct" id="pP">0%</span><span class="box-go">View dates ›</span></button>
+      <button class="box box-h" data-s="half"><span class="box-label">Half Present</span><span class="box-num" id="nH">0</span><span class="box-pct" id="pH">0%</span><span class="box-go">View dates ›</span></button>
+      <button class="box box-a" data-s="absent"><span class="box-label">Absent</span><span class="box-num" id="nA">0</span><span class="box-pct" id="pA">0%</span><span class="box-go">View dates ›</span></button>
+    </div>
+
+    <div class="records" id="records">
+      <div class="rec-head">
+        <span class="rec-title" id="recTitle">Sessions</span>
+        <span class="rec-pill" id="recPill"></span>
+      </div>
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="searchIn" placeholder="Search by date or event…" autocomplete="off">
+      </div>
+      <div class="filters">
+        <button class="chip on" data-m="all">All</button>
+        <button class="chip" data-m="offline">Offline</button>
+        <button class="chip" data-m="online">Online</button>
+      </div>
+      <div class="count" id="recCount"></div>
+      <div class="session-list" id="sessionList"></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<script type="module">
+import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/13.2.0/firebase-app.js";
+import { initializeAuth, inMemoryPersistence, onAuthStateChanged }
+  from "https://www.gstatic.com/firebasejs/13.2.0/firebase-auth.js";
+import { getFirestore, doc, getDoc, collection, query, orderBy, onSnapshot }
+  from "https://www.gstatic.com/firebasejs/13.2.0/firebase-firestore.js";
+
+const CFG = {apiKey:"AIzaSyATW9btDBBsJg32Qcj84yEU34l1OzX5G_Q",authDomain:"brushstrokes-student.firebaseapp.com",projectId:"brushstrokes-student",storageBucket:"brushstrokes-student.firebasestorage.app",messagingSenderId:"140790604149",appId:"1:140790604149:web:18dc0eaf59d9672ce8333c"};
+const ADMIN_UID = "25Tcm6EsmDSwrznOhNwZaLMV0zg1";
+
+const app  = getApps().length ? getApps()[0] : initializeApp(CFG);
+const auth = initializeAuth(app, {persistence: inMemoryPersistence});
+const db   = getFirestore(app);
+const G    = id => document.getElementById(id);
+
+let allSessions = [], currentStatus = "present", searchQ = "", modeFilter = "all";
+
+onAuthStateChanged(auth, async user => {
+  if (!user) { location.href = "index.html"; return; }
+
+  let u = {};
+  try { const s = await getDoc(doc(db,"users",user.uid)); if(s.exists()) u = s.data(); } catch(_){}
+
+  G("root").style.display = "block";
+  const isAdmin = user.uid === ADMIN_UID;
+
+  if (!isAdmin) {
+    if (!u.status || u.status === "pending")  { G("sPending").style.display="block"; return; }
+    if (u.status === "rejected")              { G("sRejected").style.display="block"; return; }
+    if (!u.nameMatchVerified)                 { G("sUnverified").style.display="block"; return; }
+  }
+
+  G("attContent").style.display = "block";
+  G("hName").textContent = u.fullName || "Student";
+  G("hSub").textContent  = `${u.course||""} · ${u.year||""} Year`;
+  loadAttendance(u.nameHash);
+});
+
+function loadAttendance(hash) {
+  if (!hash) return;
+  const monthsRef = collection(db,"attendance_summary",hash,"months");
+  onSnapshot(query(monthsRef, orderBy("__name__")), snap => {
+    allSessions = [];
+    snap.forEach(d => {
+      const sessions = d.data().sessions || {};
+      Object.values(sessions).forEach(s => { if(s && s.date) allSessions.push(s); });
+    });
+    allSessions.sort((a,b) => (b.date||"").localeCompare(a.date||""));
+
+    getDoc(doc(db,"attendance_summary",hash)).then(sd => {
+      const t = sd.exists() ? sd.data() : {};
+      renderDash(t.presentCount||0, t.halfCount||0, t.absentCount||0, t.totalSessions||allSessions.length);
+    }).catch(() => {
+      const p=allSessions.filter(s=>s.status==="present").length;
+      const h=allSessions.filter(s=>s.status==="half").length;
+      renderDash(p,h,allSessions.length-p-h,allSessions.length);
+    });
+  });
+}
+
+function renderDash(p,h,a,total) {
+  const pct = total>0 ? Math.round(((p+h*.5)/total)*100) : 0;
+  G("hPct").textContent   = pct+"%";
+  G("pieTotal").textContent = total;
+  G("lgP").textContent=p; G("lgH").textContent=h; G("lgA").textContent=a;
+  G("nP").textContent=p;  G("nH").textContent=h;  G("nA").textContent=a;
+  const pStr = n => total>0 ? Math.round((n/total)*100)+"%" : "0%";
+  G("pP").textContent=pStr(p); G("pH").textContent=pStr(h); G("pA").textContent=pStr(a);
+  drawPie(p,h,a,total);
+  if(G("records").classList.contains("open")) renderRecords();
+}
+
+function drawPie(p,h,a,total) {
+  const svg = G("pie"); svg.innerHTML="";
+  if(!total){
+    const c=document.createElementNS("http://www.w3.org/2000/svg","circle");
+    c.setAttribute("cx",50);c.setAttribute("cy",50);c.setAttribute("r",45);
+    c.setAttribute("fill","none");c.setAttribute("stroke","var(--border)");c.setAttribute("stroke-width",10);
+    svg.appendChild(c); return;
+  }
+  const slices=[{v:p,c:"#4caf50"},{v:h,c:"#29b6f6"},{v:a,c:"#ef5350"}];
+  const circ=2*Math.PI*45; let off=0;
+  slices.forEach(sl=>{
+    if(!sl.v) return;
+    const dash=(sl.v/total)*circ;
+    const c=document.createElementNS("http://www.w3.org/2000/svg","circle");
+    c.setAttribute("cx",50);c.setAttribute("cy",50);c.setAttribute("r",45);
+    c.setAttribute("fill","none");c.setAttribute("stroke",sl.c);c.setAttribute("stroke-width",10);
+    c.setAttribute("stroke-dasharray",`${dash} ${circ-dash}`);
+    c.setAttribute("stroke-dashoffset",`-${off}`);
+    svg.appendChild(c); off+=dash;
+  });
+  const hole=document.createElementNS("http://www.w3.org/2000/svg","circle");
+  hole.setAttribute("cx",50);hole.setAttribute("cy",50);hole.setAttribute("r",36);
+  hole.setAttribute("fill","var(--surface)");svg.appendChild(hole);
+}
+
+document.querySelectorAll(".box").forEach(box=>{
+  box.addEventListener("click",()=>{
+    const s=box.dataset.s;
+    if(currentStatus===s && G("records").classList.contains("open")){
+      G("records").classList.remove("open");
+      document.querySelectorAll(".box").forEach(b=>b.classList.remove("active")); return;
+    }
+    currentStatus=s;
+    G("records").classList.add("open");
+    document.querySelectorAll(".box").forEach(b=>b.classList.toggle("active",b.dataset.s===s));
+    G("searchIn").value=""; searchQ=""; modeFilter="all";
+    document.querySelectorAll(".chip").forEach(c=>c.classList.toggle("on",c.dataset.m==="all"));
+    renderRecords();
+    G("records").scrollIntoView({behavior:"smooth",block:"start"});
+  });
+});
+
+G("searchIn").addEventListener("input",function(){searchQ=this.value.toLowerCase();renderRecords();});
+document.querySelectorAll(".chip").forEach(c=>{
+  c.addEventListener("click",()=>{
+    modeFilter=c.dataset.m;
+    document.querySelectorAll(".chip").forEach(x=>x.classList.toggle("on",x.dataset.m===modeFilter));
+    renderRecords();
+  });
+});
+
+function renderRecords(){
+  const labels={present:"Present",half:"Half Present",absent:"Absent"};
+  const pills={present:"pill-p",half:"pill-h",absent:"pill-a"};
+  G("recTitle").textContent=labels[currentStatus]+" Sessions";
+  G("recPill").textContent=labels[currentStatus];
+  G("recPill").className="rec-pill "+pills[currentStatus];
+  let f=allSessions.filter(s=>s.status===currentStatus);
+  if(modeFilter!=="all") f=f.filter(s=>(s.mode||"offline")===modeFilter);
+  if(searchQ) f=f.filter(s=>((s.date||"")+" "+(s.title||"")+" "+(s.mode||"")).toLowerCase().includes(searchQ));
+  G("recCount").textContent=f.length+" session"+(f.length!==1?"s":"");
+  const list=G("sessionList");
+  if(!f.length){list.innerHTML=`<div class="empty">No sessions found.</div>`;return;}
+  list.innerHTML=f.map(s=>`<div class="s-item">
+    <span class="s-date">${fmtDate(s.date)}</span>
+    <span class="s-title">${esc(s.title||"Attendance")}</span>
+    <span class="s-mode ${(s.mode||"offline")==="online"?"mode-on":"mode-off"}">${s.mode||"offline"}</span>
+  </div>`).join("");
+}
+
+function fmtDate(iso){
+  if(!iso) return "—";
+  const p=iso.split("-");
+  const m=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  return `${parseInt(p[2])} ${m[parseInt(p[1])-1]} ${p[0]}`;
+}
+function esc(s){return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+</script>
+</body>
+</html>

@@ -196,9 +196,13 @@ function playEntry() {
     .from(".avatar-wrap",   { scale: 0, opacity: 0, duration: .55, ease: "back.out(2.5)" }, "-=.3")
     .from(".info h2",       { x: -28, opacity: 0, duration: .45 }, "-=.25")
     .from(".row",           { x: -18, opacity: 0, stagger: .08, duration: .38 }, "-=.2")
-    .from(".art-quote",     { opacity: 0, y: 14, duration: .5 }, "-=.1")
+    .from(".xp-bar-wrap",   { opacity: 0, y: 10, duration: .4 }, "-=.1")
+    .from(".xp-badge",      { scale: 0, rotation: -15, opacity: 0, duration: .45, ease: "back.out(2)" }, "-=.6")
+    .from(".carnival-banner", { opacity: 0, y: 20, duration: .5 }, "-=.1")
+    .from(".carnival-sub",    { opacity: 0, duration: .3 }, "-=.2")
     .from(".stage",         { y: 60, opacity: 0, scale: .9, duration: .75, ease: "back.out(1.3)" }, "-=.3")
     .from(".brush",         { x: -50, opacity: 0, rotate: -20, duration: .65, ease: "back.out(1.5)" }, "-=.45")
+    .from(".quest-card",    { y: 30, opacity: 0, stagger: .12, duration: .5, ease: "back.out(1.6)" }, "-=.2")
     .from("footer",         { opacity: 0, duration: .4 }, "-=.1");
 }
 
@@ -284,6 +288,16 @@ if (!calm && typeof gsap !== "undefined") {
   $$(".dab").forEach(dab => {
     dab.addEventListener("mouseenter", () => gsap.to(dab, { scale:1.14, duration:.22, ease:"back.out(2)" }));
     dab.addEventListener("mouseleave", () => gsap.to(dab, { scale:1,    duration:.28, ease:"power2.out" }));
+  });
+}
+
+// ── Quest card hover — mini confetti ─────────────────────────
+if (!calm) {
+  $$(".quest-card:not(.locked)").forEach(card => {
+    card.addEventListener("mouseenter", () => {
+      const b = card.getBoundingClientRect();
+      burstConfetti(6, b.left + b.width/2, b.top + b.height/2);
+    });
   });
 }
 
@@ -627,12 +641,28 @@ A("signupForm").addEventListener("submit", async e => {
 
     const recovery = await encryptPassword(password, answer, hash);
     const batch = writeBatch(db);
+    // status:"pending" and nameMatchVerified:false are enforced by Firestore rules
+    // (the rule rejects any create where these are not exactly these values).
     batch.set(doc(db, "users", created.uid), {
       fullName, normName: normalizeName(fullName), nameHash: hash,
-      course, year, createdAt: serverTimestamp()
+      course, year, createdAt: serverTimestamp(),
+      status: "pending",
+      role: "student",
+      nameMatchVerified: false
     });
     batch.set(doc(db, "recovery", hash), {
       uid: created.uid, questionId, ...recovery, createdAt: serverTimestamp()
+    });
+    // Write pending approval request so admin can see it on the dashboard.
+    batch.set(doc(db, "pending_approvals", created.uid), {
+      uid: created.uid,
+      fullName,
+      normName: normalizeName(fullName),
+      nameHash: hash,
+      course,
+      year,
+      submittedAt: serverTimestamp(),
+      status: "pending"
     });
     await batch.commit();
 
@@ -645,7 +675,7 @@ A("signupForm").addEventListener("submit", async e => {
     await auGo("login");
     A("lgName").value = fullName;
     A("lgPass").focus();
-    auMsg(A("lgMsg"), "Account created. Log in to continue.", "ok");
+    auMsg(A("lgMsg"), "Account created! Waiting for admin approval before you can log in.", "ok");
   } catch (err) {
     // never leave a half-made account behind
     if (created) { try { await created.delete(); } catch (_) {} }
@@ -829,6 +859,43 @@ onAuthStateChanged(auth, async user => {
     console.error("Could not load profile", err);
   }
   if (token !== auToken || auBusy) return;
+
+  // ── Approval gate ──────────────────────────────────────────
+  // Admin account (hardcoded UID) is always allowed through.
+  const STUDENT_ADMIN_UID = "25Tcm6EsmDSwrznOhNwZaLMV0zg1";
+  const isAdminUser = user.uid === STUDENT_ADMIN_UID;
+
+  if (!isAdminUser) {
+    if (!p.status || p.status === "pending") {
+      // Show pending screen — do NOT call showApp()
+      auBusy = true;
+      await signOut(auth);
+      auBusy = false;
+      htmlEl.classList.remove("auth-pending", "auth-in");
+      htmlEl.classList.add("auth-out");
+      auGo("login", false);
+      // Show pending message on the login form
+      auMsg(A("lgMsg"),
+        "⏳ Your account is pending admin approval. You will be notified once approved.",
+        "ok");
+      return;
+    }
+    if (p.status === "rejected") {
+      auBusy = true;
+      await signOut(auth);
+      auBusy = false;
+      htmlEl.classList.remove("auth-pending", "auth-in");
+      htmlEl.classList.add("auth-out");
+      auGo("login", false);
+      auMsg(A("lgMsg"),
+        "❌ Your registration was not approved. Please contact the Brushstrokes admin.",
+        "error");
+      return;
+    }
+    // status === "approved" — fall through to show app
+  }
+  // ── End approval gate ──────────────────────────────────────
+
   applyStudent({ name: p.fullName || "Student", course: p.course || "", year: p.year || "" });
   actStart(user, p.fullName || "Student");
   showApp();
