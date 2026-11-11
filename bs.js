@@ -6,7 +6,7 @@
 // ── Firebase (CDN modules) ───────────────────────────────────
 import { initializeApp } from "https://www.gstatic.com/firebasejs/13.2.0/firebase-app.js";
 import {
-  initializeAuth, inMemoryPersistence, onAuthStateChanged,
+  initializeAuth, browserSessionPersistence, onAuthStateChanged,
   createUserWithEmailAndPassword, signInWithEmailAndPassword, updatePassword, signOut
 } from "https://www.gstatic.com/firebasejs/13.2.0/firebase-auth.js";
 import {
@@ -325,8 +325,27 @@ const firebaseConfig = {
   appId: "1:140790604149:web:18dc0eaf59d9672ce8333c"
 };
 const fbApp = initializeApp(firebaseConfig);
-// in-memory session: nothing is stored, so every reload / reopen asks for login again
-const auth = initializeAuth(fbApp, { persistence: inMemoryPersistence });
+// Session lives only in this tab (sessionStorage), so moving between pages
+// (events / info / attendance / announcements) keeps you logged in.
+// A fresh open or a reload of this page still asks for login again.
+(function () {
+  try {
+    const nav = performance.getEntriesByType("navigation")[0];
+    const type = nav && nav.type;
+    let keep = type === "back_forward";
+    if (!keep && type !== "reload" && document.referrer) {
+      const r = new URL(document.referrer);
+      keep = r.origin === location.origin &&
+             /\/(attendance|events|info|announcements)\.html$/.test(r.pathname);
+    }
+    if (!keep) {
+      Object.keys(sessionStorage).forEach(function (k) {
+        if (k.indexOf("firebase:authUser:") === 0) sessionStorage.removeItem(k);
+      });
+    }
+  } catch (_) {}
+})();
+const auth = initializeAuth(fbApp, { persistence: browserSessionPersistence });
 const db = getFirestore(fbApp);
 
 const A = id => document.getElementById(id);

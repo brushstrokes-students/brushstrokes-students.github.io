@@ -156,7 +156,7 @@
 
 <script type="module">
 import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/13.2.0/firebase-app.js";
-import { initializeAuth, inMemoryPersistence, onAuthStateChanged }
+import { initializeAuth, browserSessionPersistence, onAuthStateChanged }
   from "https://www.gstatic.com/firebasejs/13.2.0/firebase-auth.js";
 import { getFirestore, doc, getDoc, collection, query, orderBy, onSnapshot }
   from "https://www.gstatic.com/firebasejs/13.2.0/firebase-firestore.js";
@@ -165,7 +165,7 @@ const CFG = {apiKey:"AIzaSyATW9btDBBsJg32Qcj84yEU34l1OzX5G_Q",authDomain:"brushs
 const ADMIN_UID = "25Tcm6EsmDSwrznOhNwZaLMV0zg1";
 
 const app  = getApps().length ? getApps()[0] : initializeApp(CFG);
-const auth = initializeAuth(app, {persistence: inMemoryPersistence});
+const auth = initializeAuth(app, {persistence: browserSessionPersistence});
 const db   = getFirestore(app);
 const G    = id => document.getElementById(id);
 

@@ -87,7 +87,7 @@
 
 <script type="module">
 import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/13.2.0/firebase-app.js";
-import { initializeAuth, inMemoryPersistence, onAuthStateChanged }
+import { initializeAuth, browserSessionPersistence, onAuthStateChanged }
   from "https://www.gstatic.com/firebasejs/13.2.0/firebase-auth.js";
 import { getFirestore as getSDb, doc, getDoc }
   from "https://www.gstatic.com/firebasejs/13.2.0/firebase-firestore.js";
@@ -102,7 +102,7 @@ const today=new Date().toISOString().slice(0,10);
 
 const sApp = getApps().find(a=>a.name==="[DEFAULT]") || initializeApp(SCFG);
 const aApp = getApps().find(a=>a.name==="admin") || initAdmin(ACFG,"admin");
-const auth = initializeAuth(sApp,{persistence:inMemoryPersistence});
+const auth = initializeAuth(sApp,{persistence:browserSessionPersistence});
 const sDb  = getSDb(sApp);
 const aDb  = getFirestore(aApp);
 const G    = id=>document.getElementById(id);
