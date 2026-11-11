@@ -85,7 +85,7 @@ const G=id=>document.getElementById(id);
 const now=Date.now(); let all=[], searchQ="";
 
 onAuthStateChanged(auth, async user=>{
-  if(!user){location.href="index.html";return;}
+  if(!user){(window.top||window).location.href="index.html";return;}
   let u={};
   try{const s=await getDoc(doc(sDb,"users",user.uid));if(s.exists())u=s.data();}catch(_){}
   G("root").style.display="block";
@@ -121,6 +121,17 @@ function render(){
   }).join("");
 }
 function esc(s){return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+</script>
+<script>
+/* Embedded mode: page opens inside index.html (header + Welcome stay on top) */
+if (new URLSearchParams(location.search).has("embed")) {
+  try { var th = localStorage.getItem("theme"); if (th === "dark" || th === "light") document.documentElement.setAttribute("data-theme", th); } catch (e) {}
+  var st = document.createElement("style");
+  st.textContent = ".back{display:none!important}body{background:transparent!important;min-height:0!important}.page{padding:4px 0 24px!important;animation:none!important}";
+  document.head.appendChild(st);
+  var sendH = function () { parent.postMessage({ bsEmbedH: document.body.offsetHeight }, location.origin); };
+  window.addEventListener("load", function () { sendH(); new ResizeObserver(sendH).observe(document.body); });
+}
 </script>
 </body>
 </html>

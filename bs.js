@@ -235,8 +235,8 @@ $$(".dab").forEach(a => {
   a.addEventListener("click", async e => {
     e.preventDefault();
     const page = a.dataset.page;
-    if (page === "home" || page === "activity") {
-      if (page === currentPage()) return say(page === "home" ? "Aap Home par hi ho 🏠" : "Aap Activity page par hi ho 🎨");
+    if (page === "home" || page === "activity" || EMBED[page]) {
+      if (page === currentPage()) return say(page === "home" ? "Aap Home par hi ho 🏠" : "Aap isi page par ho 🎨");
       const pb = a.getBoundingClientRect();
       if (!calm) burstConfetti(14, pb.left + pb.width / 2, pb.top + pb.height / 2);
       showPage(page);
@@ -929,24 +929,66 @@ onAuthStateChanged(auth, async user => {
 //  (admin side: student-activities.js).
 // ════════════════════════════════════════════════════════════
 const mainArea = $("#mainArea");
-const currentPage = () => (mainArea.dataset.view === "activity" ? "activity" : "home");
+// Events / Announcements / Attendance / Info open inside this same page (iframe under the
+// Welcome line), so the header stays and the login session is kept.
+const EMBED = { events: "events.html", announcements: "announcements.html", attendance: "attendance.html", info: "info.html" };
+const EMBED_SUB = {
+  events: "Upcoming and recent Brushstrokes events.",
+  announcements: "Latest notices from Brushstrokes.",
+  attendance: "Your attendance record.",
+  info: "General notices and resources from Brushstrokes."
+};
+let curPage = "home";
+const currentPage = () => curPage;
+let actWelcomeText = null;
 
 function showPage(page, push = true) {
-  const toAct = page === "activity";
+  if (!(page === "activity" || EMBED[page])) page = "home";
+  curPage = page;
+  const isEmbed = !!EMBED[page];
+  const toAct = page === "activity" || isEmbed;
   mainArea.dataset.view = toAct ? "activity" : "home";
   $("#activityPage").hidden = !toAct;
+
+  // activity-only widgets are hidden while an embedded page is shown
+  ["#actForm", ".act-listhead", "#actList"].forEach(sel => {
+    const el = $(sel); if (el) el.style.display = isEmbed ? "none" : "";
+  });
+  const sub = $(".act-welcome p");
+  if (sub) {
+    if (actWelcomeText === null) actWelcomeText = sub.textContent;
+    sub.textContent = isEmbed ? EMBED_SUB[page] : actWelcomeText;
+  }
+  const host = $("#embedHost"), frame = $("#embedFrame");
+  if (host) host.style.display = isEmbed ? "block" : "none";
+  if (frame) {
+    if (isEmbed) {
+      const want = EMBED[page] + "?embed=1";
+      if (frame.getAttribute("src") !== want) { frame.style.height = "420px"; frame.setAttribute("src", want); }
+    } else if (frame.getAttribute("src")) {
+      frame.removeAttribute("src");
+    }
+  }
   (toAct ? $("#slotActivity") : $("#slotHome")).appendChild($("#stage"));
   $$(".dab").forEach(d => {
     if (d.dataset.page === page) d.setAttribute("aria-current", "page");
     else d.removeAttribute("aria-current");
   });
-  const want = toAct ? "#activity" : "";
+  const want = page === "home" ? "" : "#" + page;
   if (push && location.hash !== want) {
     history.pushState(null, "", location.pathname + location.search + want);
   }
   window.scrollTo(0, 0);
 }
-function routeFromHash() { showPage(location.hash === "#activity" ? "activity" : "home", false); }
+function routeFromHash() { showPage(location.hash.slice(1), false); }
+
+// height reports from the embedded page + its Home button
+window.addEventListener("message", e => {
+  if (e.origin !== location.origin || !e.data || typeof e.data.bsEmbedH !== "number") return;
+  const f = $("#embedFrame"); if (f) f.style.height = Math.max(200, Math.ceil(e.data.bsEmbedH)) + "px";
+});
+const embBack = $("#embBack");
+if (embBack) embBack.addEventListener("click", () => showPage("home"));
 const onRoute = () => { if (htmlEl.classList.contains("auth-in")) routeFromHash(); };
 window.addEventListener("hashchange", onRoute);
 window.addEventListener("popstate", onRoute);
