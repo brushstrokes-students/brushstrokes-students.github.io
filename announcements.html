@@ -30,7 +30,7 @@
     .sw input:focus{outline:none;border-color:var(--accent)}
     .si{position:absolute;left:12px;top:50%;transform:translateY(-50%);pointer-events:none}
     .count{font-size:.82rem;color:var(--text2);font-weight:700;margin-bottom:14px}
-    .ann-list{display:flex;flex-direction:column;gap:16px}
+    .ann-list{display:flex;flex-direction:column;gap:12px}
     .ann-card{background:var(--surface);border:1.5px solid var(--border);border-radius:18px;overflow:hidden;box-shadow:var(--shadow);display:flex;transition:transform .2s,box-shadow .2s}
     .ann-card:hover{transform:translateY(-3px);box-shadow:0 8px 24px rgba(80,30,10,.13)}
     .ann-stripe{width:6px;flex-shrink:0;background:linear-gradient(to bottom,#ffd45c,#d98308)}
@@ -48,6 +48,18 @@
     .status-icon{font-size:4rem;margin-bottom:16px}
     .status-title{font-family:'Playfair Display',serif;font-size:1.5rem;margin-bottom:10px}
     .status-sub{color:var(--text2);font-size:.9rem}
+    .acc{background:var(--surface);border:1.5px solid var(--border);border-radius:16px;overflow:hidden;box-shadow:var(--shadow);transition:box-shadow .2s}
+    .acc:hover{box-shadow:0 6px 20px rgba(80,30,10,.12)}
+    .acc-hdr{display:flex;align-items:center;gap:12px;padding:16px 18px;cursor:pointer;user-select:none}
+    .acc-ico{width:40px;height:40px;border-radius:10px;flex-shrink:0;background:linear-gradient(135deg,#ffd45c,#d98308);display:flex;align-items:center;justify-content:center;font-size:1.3rem;color:#fff}
+    .acc-ttl{flex:1;font-weight:800;font-size:.95rem}
+    .acc-date{font-size:.75rem;color:var(--text2);flex-shrink:0}
+    .acc-chev{font-size:.9rem;color:var(--text2);transition:transform .25s;flex-shrink:0}
+    .acc.open .acc-chev{transform:rotate(180deg)}
+    .acc-body{max-height:0;overflow:hidden;transition:max-height .4s ease;border-top:0 solid var(--border)}
+    .acc.open .acc-body{max-height:5000px;border-top-width:1px}
+    .acc-inner{padding:16px 18px;font-size:.88rem;color:var(--text2);line-height:1.7}
+    .acc-inner .ann-poster{margin-top:8px}
   </style>
 </head>
 <body>
@@ -105,20 +117,35 @@ function render(){
   if(searchQ) list=list.filter(a=>[(a.title||""),(a.text||""),(a.description||"")].join(" ").toLowerCase().includes(searchQ));
   G("countLbl").textContent=list.length+" announcement"+(list.length!==1?"s":"");
   if(!list.length){G("annList").innerHTML=`<div class="empty"><div class="empty-icon">📢</div>No announcements yet.</div>`;return;}
-  G("annList").innerHTML=list.map(a=>{
+  G("annList").innerHTML=list.map((a,i)=>{
     const t=a.createdAt; const ms=t?(t.toMillis?t.toMillis():t):0;
     const isNew=now-ms<3*24*60*60*1000;
     const ds=ms?new Date(ms).toLocaleDateString("en-IN",{dateStyle:"medium"}):"";
     const title=a.title||a.heading||"Announcement";
     const text=a.text||a.body||a.description||"";
     const poster=a.previewUrl||a.posterImage||(a.posterData&&a.posterData.dataURL)||"";
-    return `<div class="ann-card"><div class="ann-stripe"></div><div class="ann-body">
-      <div class="ann-meta">${ds?`<span class="ann-date">📅 ${esc(ds)}</span>`:""} ${isNew?'<span class="ann-new">NEW</span>':""}</div>
-      <div class="ann-title">${esc(title)}</div>
-      ${text?`<div class="ann-text">${esc(text)}</div>`:""}
-      ${poster?`<div class="ann-poster"><img src="${esc(poster)}" alt="poster" loading="lazy"></div>`:""}
-    </div></div>`;
+    return `<div class="acc" id="ac${i}">
+      <div class="acc-hdr">
+        <div class="acc-ico">📢</div>
+        <div class="acc-ttl">${esc(title)}${isNew?' <span class="ann-new">NEW</span>':""}</div>
+        ${ds?`<div class="acc-date">${esc(ds)}</div>`:""}
+        <span class="acc-chev">▾</span>
+      </div>
+      <div class="acc-body"><div class="acc-inner">
+        ${text?esc(text).replace(/\n/g,"<br>"):""}
+        ${poster?`<div class="ann-poster"><img src="${esc(poster)}" alt="poster" loading="lazy"></div>`:""}
+        ${!text&&!poster?"<em>No additional content.</em>":""}
+      </div></div>
+    </div>`;
   }).join("");
+  document.querySelectorAll(".acc-hdr").forEach(h=>{
+    h.addEventListener("click",()=>{
+      const card=h.closest(".acc");
+      const open=card.classList.contains("open");
+      document.querySelectorAll(".acc.open").forEach(c=>c.classList.remove("open"));
+      if(!open) card.classList.add("open");
+    });
+  });
 }
 function esc(s){return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
 </script>

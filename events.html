@@ -121,9 +121,15 @@ onAuthStateChanged(auth, async user=>{
   }
   G("evContent").style.display="block";
   // Read directly from admin Firestore (public read allowed by admin rules)
-  onSnapshot(query(collection(aDb,"home_events"),orderBy("createdAt","desc")), snap=>{
+  // no orderBy: a query with orderBy silently drops docs that lack that field
+  onSnapshot(collection(aDb,"home_events"), snap=>{
     all=snap.docs.map(d=>({id:d.id,...d.data()}));
+    all.sort((a,b)=>sortKey(b).localeCompare(sortKey(a)));
     render();
+  }, err=>{
+    console.error("Events listener:",err);
+    G("countLbl").textContent="";
+    G("grid").innerHTML=`<div class="empty"><div class="empty-icon">⚠️</div>Events load nahi hue: ${esc(err.code||err.message)}</div>`;
   });
 });
 
@@ -138,27 +144,39 @@ document.querySelectorAll(".chip").forEach(c=>{
 
 function render(){
   let list=[...all];
-  if(filter==="upcoming") list=list.filter(e=>(e.date||e.eventDate||"")>=today);
-  if(filter==="past")     list=list.filter(e=>(e.date||e.eventDate||"")<today);
+  if(filter==="upcoming") list=list.filter(e=>isoOf(e)>=today);
+  if(filter==="past")     list=list.filter(e=>isoOf(e)<today);
   if(searchQ) list=list.filter(e=>[(e.title||""),(e.name||""),(e.description||""),(e.venue||"")].join(" ").toLowerCase().includes(searchQ));
   G("countLbl").textContent=list.length+" event"+(list.length!==1?"s":"");
   if(!list.length){G("grid").innerHTML=`<div class="empty"><div class="empty-icon">🌟</div>No events found.</div>`;return;}
   const m=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
   G("grid").innerHTML=list.map(e=>{
-    const iso=e.date||e.eventDate||""; const p=iso.split("-");
+    const iso=isoOf(e); const p=iso.split("-");
     const ds=p.length>=3?`${parseInt(p[2])} ${m[parseInt(p[1])-1]} ${p[0]}`:"";
     const isPast=iso<today;
-    const photos=e.photos||e.images||[];
+    const photos=[].concat(e.photos||e.images||e.photo||e.image||e.imageUrl||e.poster||e.previewUrl||[]).filter(Boolean);
     return `<div class="card">
       <div class="card-img">${photos[0]?`<img src="${esc(photos[0])}" alt="${esc(e.title||e.name||"")}" loading="lazy" onerror="this.parentNode.textContent='🌟'">`:"🌟"}</div>
       <div class="card-body">
         ${ds?`<span class="card-date">📅 ${ds} · ${isPast?"Past":"Upcoming"}</span>`:""}
-        <div class="card-title">${esc(e.title||e.name||"Event")}</div>
+        <div class="card-title">${esc(e.title||e.name||e.eventName||"Event")}</div>
         ${e.description?`<div class="card-desc">${esc(e.description)}</div>`:""}
         ${e.venue?`<div class="card-venue">📍 ${esc(e.venue)}</div>`:""}
       </div>
     </div>`;
   }).join("");
+}
+function isoOf(e){
+  let d=e.date||e.eventDate||"";
+  if(d&&typeof d==="object"&&d.toDate){const x=d.toDate();return x.getFullYear()+"-"+String(x.getMonth()+1).padStart(2,"0")+"-"+String(x.getDate()).padStart(2,"0");}
+  d=String(d);
+  const m=d.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})$/);
+  if(m) return m[3]+"-"+m[2].padStart(2,"0")+"-"+m[1].padStart(2,"0");
+  return d;
+}
+function sortKey(e){
+  const c=e.createdAt; const ms=c?(c.toMillis?c.toMillis():Number(c)||0):0;
+  return (isoOf(e)||"0000-00-00")+"|"+String(ms).padStart(15,"0");
 }
 function esc(s){return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
 </script>

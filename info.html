@@ -49,6 +49,16 @@
     .status-icon{font-size:4rem;margin-bottom:16px}
     .status-title{font-family:'Playfair Display',serif;font-size:1.5rem;margin-bottom:10px}
     .status-sub{color:var(--text2);font-size:.9rem}
+    .inf-card{background:var(--surface);border:1.5px solid var(--border);border-radius:18px;overflow:hidden;box-shadow:var(--shadow);display:flex;transition:transform .2s,box-shadow .2s}
+    .inf-card:hover{transform:translateY(-3px);box-shadow:0 8px 24px rgba(80,30,10,.13)}
+    .inf-stripe{width:6px;flex-shrink:0;background:linear-gradient(to bottom,#62b1f5,#2569b8)}
+    .inf-body{padding:18px 18px 18px 16px;flex:1;min-width:0}
+    .inf-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+    .inf-date{font-size:.75rem;font-weight:700;color:var(--accent);background:rgba(92,15,32,.07);padding:2px 10px;border-radius:999px}
+    .inf-title{font-weight:800;font-size:1.05rem;margin-bottom:6px}
+    .inf-text{font-size:.88rem;color:var(--text2);line-height:1.65}
+    .inf-img{display:flex;justify-content:center;margin-top:12px}
+    .inf-img img{max-width:100%;border-radius:10px;border:1px solid var(--border)}
   </style>
 </head>
 <body>
@@ -116,34 +126,19 @@ function render(){
   if(searchQ) list=list.filter(a=>[(a.title||""),(a.text||""),(a.body||"")].join(" ").toLowerCase().includes(searchQ));
   G("countLbl").textContent=list.length+" item"+(list.length!==1?"s":"");
   if(!list.length){G("infoList").innerHTML=`<div class="empty"><div class="empty-icon">ℹ️</div>No information posts yet.</div>`;return;}
-  G("infoList").innerHTML=list.map((a,i)=>{
+  G("infoList").innerHTML=list.map(a=>{
     const title=a.title||a.heading||"Information";
     const text=a.text||a.body||a.description||"";
     const imgs=a.images||[];
     const t=a.createdAt; const ms=t?(t.toMillis?t.toMillis():t):0;
     const ds=ms?new Date(ms).toLocaleDateString("en-IN",{dateStyle:"medium"}):"";
-    return `<div class="info-card" id="ic${i}">
-      <div class="info-hdr">
-        <div class="info-ico">${guessIcon(title)}</div>
-        <div class="info-ttl">${esc(title)}</div>
-        ${ds?`<div class="info-date">${esc(ds)}</div>`:""}
-        <span class="info-chev">▾</span>
-      </div>
-      <div class="info-body"><div class="info-inner">
-        ${text?esc(text).replace(/\n/g,"<br>"):""}
-        ${imgs.map(img=>`<img src="${esc(img)}" alt="info" loading="lazy">`).join("")}
-        ${!text&&!imgs.length?"<em>No additional content.</em>":""}
-      </div></div>
-    </div>`;
+    return `<div class="inf-card"><div class="inf-stripe"></div><div class="inf-body">
+      <div class="inf-meta">${ds?`<span class="inf-date">📅 ${esc(ds)}</span>`:""}</div>
+      <div class="inf-title">${guessIcon(title)} ${esc(title)}</div>
+      ${text?`<div class="inf-text">${esc(text).replace(/\n/g,"<br>")}</div>`:""}
+      ${imgs.map(img=>`<div class="inf-img"><img src="${esc(img)}" alt="info" loading="lazy"></div>`).join("")}
+    </div></div>`;
   }).join("");
-  document.querySelectorAll(".info-hdr").forEach(h=>{
-    h.addEventListener("click",()=>{
-      const card=h.closest(".info-card");
-      const open=card.classList.contains("open");
-      document.querySelectorAll(".info-card.open").forEach(c=>c.classList.remove("open"));
-      if(!open) card.classList.add("open");
-    });
-  });
 }
 function esc(s){return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
 </script>
