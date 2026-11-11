@@ -96,7 +96,7 @@ onAuthStateChanged(auth, async user=>{
   }
   G("annContent").style.display="block";
   onSnapshot(query(collection(aDb,"announcements"),orderBy("createdAt","desc")),snap=>{
-    all=snap.docs.map(d=>({id:d.id,...d.data()}));render();
+    all=snap.docs.map(d=>({id:d.id,...d.data()})).filter(a=>a.published);render();
   });
 });
 G("searchIn").addEventListener("input",function(){searchQ=this.value.toLowerCase();render();});
@@ -111,7 +111,7 @@ function render(){
     const ds=ms?new Date(ms).toLocaleDateString("en-IN",{dateStyle:"medium"}):"";
     const title=a.title||a.heading||"Announcement";
     const text=a.text||a.body||a.description||"";
-    const poster=a.posterImage||(a.posterData&&a.posterData.dataURL)||"";
+    const poster=a.previewUrl||a.posterImage||(a.posterData&&a.posterData.dataURL)||"";
     return `<div class="ann-card"><div class="ann-stripe"></div><div class="ann-body">
       <div class="ann-meta">${ds?`<span class="ann-date">📅 ${esc(ds)}</span>`:""} ${isNew?'<span class="ann-new">NEW</span>':""}</div>
       <div class="ann-title">${esc(title)}</div>
