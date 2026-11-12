@@ -293,6 +293,7 @@ function renderRecords(){
     <span class="s-date">${fmtDate(s.date)}</span>
     <span class="s-title">${esc(s.title||"Attendance")}</span>
     <span class="s-mode ${(s.mode||"offline")==="online"?"mode-on":"mode-off"}">${s.mode||"offline"}</span>
+    ${s.kind==="core"?`<span class="s-mode mode-on">core</span>`:""}
   </div>`).join("");
 }
 
