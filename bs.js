@@ -64,11 +64,25 @@ setTheme(saved, false);
 requestAnimationFrame(() => requestAnimationFrame(() =>
   document.body.classList.add("theme-ready")
 ));
+// switch ke dauran sab element-transitions band (warna har element alag animate hokar atakta hai)
+const themeStyle = document.createElement("style");
+themeStyle.textContent =
+  "html.theme-switching *,html.theme-switching *::before,html.theme-switching *::after{transition:none!important}" +
+  "::view-transition-old(root),::view-transition-new(root){animation-duration:.22s}";
+document.head.appendChild(themeStyle);
+
 tbtn.addEventListener("click", () => {
   const n = root.dataset.theme === "dark" ? "light" : "dark";
-  setTheme(n, true);
   try { localStorage.setItem("theme", n); } catch(e) {}
-  if (!calm) burstConfetti(10);
+  root.classList.add("theme-switching");
+  const done = () => { root.classList.remove("theme-switching"); if (!calm) burstConfetti(10); };
+  if (document.startViewTransition && !calm) {
+    const vt = document.startViewTransition(() => setTheme(n, true));
+    vt.finished.then(done, done);
+  } else {
+    setTheme(n, true);
+    requestAnimationFrame(() => requestAnimationFrame(done));
+  }
 });
 
 // ════════════════════════════════════════════════════════════
@@ -106,8 +120,10 @@ function spawnPiece(x, y) {
   }
 }
 
+let confettiRunning = false;
 function burstConfetti(n = 20, cx, cy) {
   for (let i = 0; i < n; i++) spawnPiece(cx, cy);
+  if (!confettiRunning) { confettiRunning = true; requestAnimationFrame(animateConfetti); }   // loop sirf tab chale jab pieces hon
 }
 
 function animateConfetti() {
@@ -135,9 +151,9 @@ function animateConfetti() {
     ctx.restore();
     if (p.age > p.life || p.y > confettiCanvas.height + 20) pieces.splice(i, 1);
   }
-  requestAnimationFrame(animateConfetti);
+  if (pieces.length) requestAnimationFrame(animateConfetti);
+  else { confettiRunning = false; ctx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height); }
 }
-if (!calm) animateConfetti();
 
 // (opening confetti burst now plays after login)
 
@@ -210,12 +226,18 @@ function playEntry() {
 const stage = $("#stage"), pal = $("#palette"), brush = $("#brush"), easel = $("#easel");
 
 if (!calm) {
+  let tiltRaf = 0, tiltEv = null;
   stage.addEventListener("pointermove", e => {
-    const r = stage.getBoundingClientRect();
-    const x = (e.clientX - r.left) / r.width  - .5;
-    const y = (e.clientY - r.top)  / r.height - .5;
-    pal.style.transform = `perspective(900px) rotateX(${-y*10}deg) rotateY(${x*10}deg)`;
-    brush.style.setProperty("--wob", `${x * 9}deg`);
+    tiltEv = e;
+    if (tiltRaf) return;
+    tiltRaf = requestAnimationFrame(() => {
+      tiltRaf = 0;
+      const r = stage.getBoundingClientRect();
+      const x = (tiltEv.clientX - r.left) / r.width  - .5;
+      const y = (tiltEv.clientY - r.top)  / r.height - .5;
+      pal.style.transform = `perspective(900px) rotateX(${-y*10}deg) rotateY(${x*10}deg)`;
+      brush.style.setProperty("--wob", `${x * 9}deg`);
+    });
   });
   stage.addEventListener("pointerleave", () => {
     pal.style.transform = "";
