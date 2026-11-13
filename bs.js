@@ -225,24 +225,92 @@ function playEntry() {
 // ── 3-D palette tilt ─────────────────────────────────────────
 const stage = $("#stage"), pal = $("#palette"), brush = $("#brush"), easel = $("#easel");
 
-if (!calm) {
-  let tiltRaf = 0, tiltEv = null;
+// Palette: mouse hover = halka 3-D tilt, swipe / drag (left-right) = spin with inertia
+let tiltX = 0, tiltY = 0, spin = 0, spinVel = 0, spinRaf = 0, paintRaf = 0;
+function paintPal() {
+  pal.style.transform = `perspective(900px) rotateX(${tiltX}deg) rotateY(${tiltY}deg) rotateZ(${spin}deg)`;
+  pal.style.setProperty("--spin", spin + "deg");
+}
+function queuePaint() {
+  if (paintRaf) return;
+  paintRaf = requestAnimationFrame(() => { paintRaf = 0; paintPal(); });
+}
+function stopSpinInertia() { if (spinRaf) { cancelAnimationFrame(spinRaf); spinRaf = 0; } }
+function spinInertia() {
+  spin += spinVel;
+  spinVel *= 0.95;
+  paintPal();
+  if (Math.abs(spinVel) > 0.06) spinRaf = requestAnimationFrame(spinInertia);
+  else { spinRaf = 0; pal.style.transition = ""; }
+}
+
+(function palSpin() {
+  let down = false, moved = false, startX = 0, startSpin = 0, lastX = 0, lastT = 0, swallowClick = false;
+  const SPEED = 0.7;                                   // 1px swipe = 0.7 degree
+
+  stage.addEventListener("pointerdown", e => {
+    if (e.pointerType === "mouse" && e.button !== 0) return;
+    down = true; moved = false;
+    startX = lastX = e.clientX; startSpin = spin; lastT = performance.now(); spinVel = 0;
+    stopSpinInertia();
+  });
+
   stage.addEventListener("pointermove", e => {
-    tiltEv = e;
-    if (tiltRaf) return;
-    tiltRaf = requestAnimationFrame(() => {
-      tiltRaf = 0;
-      const r = stage.getBoundingClientRect();
-      const x = (tiltEv.clientX - r.left) / r.width  - .5;
-      const y = (tiltEv.clientY - r.top)  / r.height - .5;
-      pal.style.transform = `perspective(900px) rotateX(${-y*10}deg) rotateY(${x*10}deg)`;
-      brush.style.setProperty("--wob", `${x * 9}deg`);
-    });
+    if (down) {
+      const dx = e.clientX - startX;
+      if (!moved && Math.abs(dx) > 6) {
+        moved = true;
+        pal.style.transition = "none";
+        try { stage.setPointerCapture(e.pointerId); } catch (_) {}
+      }
+      if (moved) {
+        spin = startSpin + dx * SPEED;
+        const now = performance.now(), dt = Math.max(1, now - lastT);
+        spinVel = ((e.clientX - lastX) * SPEED) / dt * 16;     // degrees per frame
+        lastX = e.clientX; lastT = now;
+        queuePaint();
+      }
+      return;
+    }
+    if (calm || e.pointerType !== "mouse") return;             // tilt sirf mouse hover pe
+    const r = stage.getBoundingClientRect();
+    const x = (e.clientX - r.left) / r.width  - .5;
+    const y = (e.clientY - r.top)  / r.height - .5;
+    tiltX = -y * 10; tiltY = x * 10;
+    brush.style.setProperty("--wob", `${x * 9}deg`);
+    queuePaint();
   });
+
+  const end = () => {
+    if (!down) return;
+    down = false;
+    if (moved) {
+      swallowClick = true;                                      // swipe ke baad dab ka click na chale
+      setTimeout(() => { swallowClick = false; }, 60);
+      if (!calm && Math.abs(spinVel) > 0.3) {
+        spinVel = Math.max(-18, Math.min(18, spinVel));
+        spinRaf = requestAnimationFrame(spinInertia);
+      } else {
+        pal.style.transition = "";
+      }
+    }
+  };
+  stage.addEventListener("pointerup", end);
+  stage.addEventListener("pointercancel", end);
+  stage.addEventListener("lostpointercapture", end);
+
+  stage.addEventListener("click", e => {
+    if (swallowClick) { e.stopPropagation(); e.preventDefault(); swallowClick = false; }
+  }, true);
+
   stage.addEventListener("pointerleave", () => {
-    pal.style.transform = "";
+    tiltX = 0; tiltY = 0;
     brush.style.setProperty("--wob", "0deg");
+    if (!down) queuePaint();
   });
+})();
+
+if (!calm) {
   easel.addEventListener("pointermove", e => {
     const r = easel.getBoundingClientRect();
     const x = (e.clientX - r.left) / r.width  - .5;

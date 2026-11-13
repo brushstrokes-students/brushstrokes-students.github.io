@@ -7,7 +7,8 @@
 
 /* ── TOKENS ─────────────────────────────────────────────── */
 :root {
-  --bg:       #fdf4e8;
+  color-scheme: light;
+  --bg:       #ffffff;
   --bg2:      #ece0ff;
   --paper:    #fffaf3;
   --ink:      #2a1830;
@@ -30,6 +31,7 @@
   --carnival4:#4d96ff;
 }
 [data-theme="dark"] {
+  color-scheme: dark;
   --bg:       #120c18;
   --bg2:      #251838;
   --paper:    #1c1428;
@@ -60,13 +62,9 @@ body {
   min-height: 100vh;
   display: flex; flex-direction: column;
   overflow-x: hidden;
-  background:
-    radial-gradient(60% 38% at 88% 20%, var(--bg2), transparent 70%),
-    radial-gradient(50% 32% at 8%  70%, rgba(255,160,100,.2), transparent 70%),
-    var(--bg);
+  background: var(--bg);           /* plain flat colour: light = white, dark = dark */
 }
-body.theme-ready { transition: background .4s, color .4s; }
-body.theme-ready * { transition: background-color .4s, color .4s, border-color .4s, box-shadow .4s; }
+/* theme switch: koi per-element transition nahi (atakta tha); smooth fade JS ke View Transition se hota hai */
 
 /* ── CANVASES (behind everything) ──────────────────────── */
 #confettiCanvas, #paintCanvas {
@@ -101,7 +99,7 @@ body.theme-ready * { transition: background-color .4s, color .4s, border-color .
   position: absolute; inset: 0; pointer-events: none;
   background: radial-gradient(ellipse 60% 120% at 50% -10%,
     rgba(255,220,120,.18) 0%, transparent 70%);
-  animation: spotPulse 4s ease-in-out infinite;
+  opacity: .85;
 }
 @keyframes spotPulse {
   0%,100% { opacity: .6; }
@@ -260,7 +258,6 @@ main {
   font-family: "Fredoka One", cursive;
   font-size: .8rem; color: #fff;
   box-shadow: 0 3px 10px rgba(255,100,100,.4);
-  animation: badgePulse 2.5s ease-in-out infinite;
 }
 @keyframes badgePulse {
   0%,100% { box-shadow: 0 3px 10px rgba(255,100,100,.4); }
@@ -420,7 +417,6 @@ main {
   -webkit-background-clip: text; -webkit-text-fill-color: transparent;
   background-clip: text;
   filter: drop-shadow(0 2px 6px rgba(255,100,150,.3));
-  animation: rainbowShift 4s linear infinite;
   background-size: 200% 100%;
 }
 @keyframes rainbowShift {
@@ -447,7 +443,8 @@ main {
   width: var(--size); aspect-ratio: 400/360;
   margin-bottom: 8%;
 }
-.palette { position:absolute;inset:0;transition:transform .2s ease-out;will-change:transform; }
+.palette { position:absolute;inset:0;transition:transform .2s ease-out;will-change:transform;--spin:0deg; }
+.stage { touch-action: pan-y; user-select: none; -webkit-user-select: none; }
 .shape {
   position:absolute;inset:0;width:100%;height:100%;
   filter:drop-shadow(0 24px 20px var(--shadow));
@@ -457,6 +454,7 @@ main {
 .dab {
   position:absolute;
   left:var(--x);top:var(--y);translate:-50% -50%;
+  rotate:calc(var(--spin,0deg) * -1);
   width:20.5%;aspect-ratio:1;border-radius:50%;
   display:flex;flex-direction:column;align-items:center;justify-content:center;
   gap:3px;color:#fff;text-decoration:none;
@@ -593,7 +591,6 @@ main {
   transition:.28s cubic-bezier(.25,1,.5,1);
   pointer-events:none;z-index:40;
   box-shadow:0 6px 18px var(--shadow);
-  backdrop-filter:blur(4px);
 }
 .toast.show{opacity:1;translate:-50% 0}
 
@@ -998,7 +995,6 @@ main[data-view="activity"] > .quest-section { display: none; }
   -webkit-background-clip: text; background-clip: text;
   -webkit-text-fill-color: transparent; color: transparent;
   filter: drop-shadow(0 2px 6px rgba(255, 100, 150, .25));
-  animation: rainbowShift 6s linear infinite;
 }
 main[data-view="activity"] > .art-quote { display: none; }
 @media (prefers-reduced-motion: reduce) { .art-quote { animation: none; } }
